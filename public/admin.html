@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="admin.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+</head>
+
+<body>
+
+    <!-- CROPPING MODAL -->
+    <div id="cropper-modal" class="cropper-modal" style="display: none;">
+        <div class="cropper-container">
+            <div class="cropper-wrapper">
+                <img id="cropper-image" src="" style="max-width: 100%;">
+            </div>
+            <div class="cropper-controls">
+                <button id="btn-cancel-crop" class="btn-secondary">Cancel</button>
+                <button id="btn-save-crop" class="btn-primary">✂️ Crop & Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="sidebar">
+        <div class="brand">
+            ❤️ LoveStory Admin
+        </div>
+        <ul class="nav-links">
+            <li class="nav-item active" data-target="view-dashboard">Dashboard</li>
+            <li class="nav-item" data-target="view-collage">Collage Frame</li>
+            <li class="nav-item" data-target="view-main">Main Content</li>
+            <li class="nav-item" data-target="view-media">Timeline & Gallery</li>
+            <li class="nav-item" data-target="view-letter">Letter & Secret</li>
+            <li class="nav-item" data-target="view-vibes">Our Vibes</li>
+            <li class="nav-item" data-target="view-music">Background Music</li>
+        </ul>
+        <div class="actions">
+            <a href="/" target="_blank" class="btn-preview">↗ Open Website</a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content">
+
+        <div class="header-bar">
+            <h1 id="page-title" class="page-title">Dashboard</h1>
+            <button id="save-btn" class="btn-primary">💾 Save All Changes</button>
+        </div>
+
+        <form id="content-form">
+
+            <!-- VIEW: DASHBOARD (Intro) -->
+            <div id="view-dashboard" class="admin-view active">
+                <div class="card">
+                    <h2>Welcome Back!</h2>
+                    <p>Select a section from the sidebar to start editing your love story.</p>
+                </div>
+            </div>
+
+            <!-- VIEW: MAIN CONTENT (Hero & Story) -->
+            <div id="view-main" class="admin-view">
+                <div class="card">
+                    <h2>Hero Section</h2>
+                    <div class="form-group">
+                        <label>Main Title</label>
+                        <input type="text" name="hero.title" id="hero-title">
+                    </div>
+                    <div class="form-group">
+                        <label>Subtitle</label>
+                        <input type="text" name="hero.subtitle" id="hero-subtitle">
+                    </div>
+                    <div class="form-group">
+                        <label>Button Text</label>
+                        <input type="text" name="hero.buttonText" id="hero-buttonText">
+                    </div>
+                    <div class="form-group">
+                        <label>Hero Background Image</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="hidden" name="hero.backgroundImage" id="hero-backgroundImage">
+                            <img id="hero-image-preview" src="" alt="Preview"
+                                style="width: 80px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; display: none;">
+                            <input type="file" id="hero-file-input" style="display:none;" accept="image/*,video/*">
+                            <button type="button" id="hero-upload-btn" class="btn-primary" style="padding: 8px 15px;">📁
+                                Upload Background</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Our Story</h2>
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" name="story.title" id="story-title">
+                    </div>
+                    <div class="form-group">
+                        <label>Date Text</label>
+                        <input type="text" name="story.date" id="story-date">
+                    </div>
+                    <div class="form-group">
+                        <label>Story Text</label>
+                        <textarea name="story.text" id="story-text" rows="4"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Story Image</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <!-- Hidden input stores the actual URL -->
+                            <input type="hidden" name="story.imageUrl" id="story-imageUrl">
+
+                            <!-- Preview Image -->
+                            <img id="story-image-preview" src="" alt="Preview"
+                                style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; display: none;">
+
+                            <!-- File Input & Button -->
+                            <input type="file" id="story-file-input" style="display:none;" accept="image/*,video/*">
+                            <button type="button" id="story-upload-btn" class="btn-primary"
+                                style="padding: 8px 15px;">📁 Upload Media</button>
+                            <span id="story-upload-status" style="font-size: 0.9em; color: #666;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: MEDIA (Timeline & Gallery) -->
+            <div id="view-media" class="admin-view">
+                <div class="card">
+                    <h2>⏳ Timeline Events</h2>
+                    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Add key moments in your relationship.
+                    </p>
+
+                    <div id="timeline-list" class="item-list">
+                        <!-- JS renders items here -->
+                    </div>
+                    <button type="button" id="add-timeline-btn" class="btn-add">+ Add New Event</button>
+                </div>
+
+                <div class="card">
+                    <h2>🖼️ Photo Gallery</h2>
+                    <div id="gallery-list" class="gallery-grid-admin">
+                        <!-- JS renders items here -->
+                    </div>
+                    <button type="button" id="add-gallery-btn" class="btn-add">+ Add New Photo</button>
+                </div>
+            </div>
+
+            <!-- VIEW: COLLAGE -->
+            <div id="view-collage" class="admin-view">
+                <div class="card">
+                    <h2>Artistic Collage Frame</h2>
+                    <p class="text-sm text-gray">Upload 3 photos to create a beautiful framed memory.</p>
+
+                    <div class="form-group">
+                        <label>Frame Title / Caption</label>
+                        <input type="text" id="collage-caption" placeholder="e.g., A Beautiful Autumn Blessing...">
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Left Large Photo</label>
+                            <img id="collage-preview-1" src=""
+                                style="width: 100%; height: 150px; object-fit: cover; display: none; border-radius: 8px; margin-bottom: 10px;">
+                            <input type="hidden" id="collage-url-1">
+                            <button type="button" class="btn-primary" id="btn-upload-collage-1">📁 Upload Left
+                                Photo</button>
+                            <input type="file" id="file-collage-1" style="display: none;" accept="image/*">
+                        </div>
+                        <div class="form-group">
+                            <label>Right Top Photo</label>
+                            <img id="collage-preview-2" src=""
+                                style="width: 100%; height: 150px; object-fit: cover; display: none; border-radius: 8px; margin-bottom: 10px;">
+                            <input type="hidden" id="collage-url-2">
+                            <button type="button" class="btn-primary" id="btn-upload-collage-2">📁 Upload Right
+                                Top</button>
+                            <input type="file" id="file-collage-2" style="display: none;" accept="image/*">
+                        </div>
+                        <div class="form-group">
+                            <label>Right Bottom Photo</label>
+                            <img id="collage-preview-3" src=""
+                                style="width: 100%; height: 150px; object-fit: cover; display: none; border-radius: 8px; margin-bottom: 10px;">
+                            <input type="hidden" id="collage-url-3">
+                            <button type="button" class="btn-primary" id="btn-upload-collage-3">📁 Upload Right
+                                Bottom</button>
+                            <input type="file" id="file-collage-3" style="display: none;" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: LETTER & SECRET -->
+            <div id="view-letter" class="admin-view">
+                <div class="card">
+                    <h2>The Letter</h2>
+                    <div class="form-group">
+                        <label>Letter Title</label>
+                        <input type="text" name="letter.title" id="letter-title">
+                    </div>
+                    <div class="form-group">
+                        <label>Letter Body</label>
+                        <textarea name="letter.text" id="letter-text" rows="8"></textarea>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Secret Message (Password Protected)</h2>
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" name="future.title" id="future-title">
+                    </div>
+                    <div class="form-group">
+                        <label>Intro Text</label>
+                        <input type="text" name="future.intro" id="future-intro">
+                    </div>
+                    <div class="form-group">
+                        <label>Button Text</label>
+                        <input type="text" name="future.buttonText" id="future-buttonText">
+                    </div>
+
+                    <div style="border-top: 1px solid #eee; margin: 20px 0; padding-top: 20px;">
+                        <h3>🔒 Security</h3>
+                        <div class="form-group">
+                            <label>Secret Password</label>
+                            <input type="password" name="future.password" id="future-password">
+                            <!-- Changed to password type for security UI -->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Secret Title (Revealed)</label>
+                        <input type="text" name="future.secretTitle" id="future-secretTitle">
+                    </div>
+                    <div class="form-group">
+                        <label>Secret Message (HTML allowed)</label>
+                        <textarea name="future.secretMessage" id="future-secretMessage" rows="4"></textarea>
+                    </div>
+
+                    <div class="form-group" style="padding-top: 15px; border-top: 1px solid #333;">
+                        <label>🔒 Secret Video (Revealed with Password)</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="hidden" id="future-videoUrl">
+                            <video id="future-video-preview" controls
+                                style="max-width: 150px; display: none; border-radius: 8px;"></video>
+                            <input type="file" id="future-video-input" accept="video/*" hidden>
+                            <button type="button" id="future-video-upload-btn" class="btn-primary">📁 Upload Secret
+                                Video</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: OUR VIBES -->
+            <div id="view-vibes" class="admin-view">
+                <div class="card">
+                    <h2>✨ Our Vibes (Lighting Cards)</h2>
+                    <p style="margin-bottom: 20px; color: #ccc;">Upload a photo for each vibe card. These will replace
+                        the
+                        simple text background.</p>
+
+                    <div class="grid-2">
+                        <!-- 1. Laugh -->
+                        <div class="upload-box" id="vibe-upload-1">
+                            <h3>😂 Laugh</h3>
+                            <input type="file" id="file-vibe-1" accept="image/*" hidden>
+                            <button type="button" class="btn-primary" id="btn-upload-vibe-1">📁 Upload Photo</button>
+                            <input type="hidden" id="vibe-url-1">
+                            <img id="vibe-preview-1" src="" class="preview-img" style="display:none; margin-top:10px;">
+                        </div>
+
+                        <!-- 2. Hug -->
+                        <div class="upload-box" id="vibe-upload-2">
+                            <h3>🤗 Hug</h3>
+                            <input type="file" id="file-vibe-2" accept="image/*" hidden>
+                            <button type="button" class="btn-primary" id="btn-upload-vibe-2">📁 Upload Photo</button>
+                            <input type="hidden" id="vibe-url-2">
+                            <img id="vibe-preview-2" src="" class="preview-img" style="display:none; margin-top:10px;">
+                        </div>
+
+                        <!-- 3. Silly -->
+                        <div class="upload-box" id="vibe-upload-3">
+                            <h3>🤪 Silly</h3>
+                            <input type="file" id="file-vibe-3" accept="image/*" hidden>
+                            <button type="button" class="btn-primary" id="btn-upload-vibe-3">📁 Upload Photo</button>
+                            <input type="hidden" id="vibe-url-3">
+                            <img id="vibe-preview-3" src="" class="preview-img" style="display:none; margin-top:10px;">
+                        </div>
+
+                        <!-- 4. Travel -->
+                        <div class="upload-box" id="vibe-upload-4">
+                            <h3>✈️ Travel</h3>
+                            <input type="file" id="file-vibe-4" accept="image/*" hidden>
+                            <button type="button" class="btn-primary" id="btn-upload-vibe-4">📁 Upload Photo</button>
+                            <input type="hidden" id="vibe-url-4">
+                            <img id="vibe-preview-4" src="" class="preview-img" style="display:none; margin-top:10px;">
+                        </div>
+
+                        <!-- 5. Love -->
+                        <div class="upload-box" id="vibe-upload-5">
+                            <h3>❤️ Love</h3>
+                            <input type="file" id="file-vibe-5" accept="image/*" hidden>
+                            <button type="button" class="btn-primary" id="btn-upload-vibe-5">📁 Upload Photo</button>
+                            <input type="hidden" id="vibe-url-5">
+                            <img id="vibe-preview-5" src="" class="preview-img" style="display:none; margin-top:10px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: VIDEO REMOVED -->
+
+            <!-- VIEW: BACKGROUND MUSIC -->
+            <div id="view-music" class="admin-view">
+                <div class="card">
+                    <h2>🎵 Background Music Settings</h2>
+                    <p style="margin-bottom: 20px; color: #ccc;">Control the romantic background music for your site.
+                    </p>
+
+                    <div class="form-group">
+                        <label>Upload Song (MP3)</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="hidden" id="music-url">
+                            <input type="file" id="music-file-input" accept="audio/*" hidden>
+                            <button type="button" id="music-upload-btn" class="btn-primary">📁 Upload Music</button>
+                            <span id="music-upload-status" style="font-size: 0.9em; color: #666;"></span>
+                        </div>
+                    </div>
+
+                    <div
+                        style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                        <label style="display:block; margin-bottom: 10px;">Live Preview & Trim</label>
+                        <audio id="music-preview" controls style="width: 100%; margin-bottom: 15px;"></audio>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Start Time (seconds)</label>
+                                <input type="number" id="music-startTime" value="0" min="0" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label>End Time (seconds)</label>
+                                <input type="number" id="music-endTime" value="30" min="0" step="0.1">
+                                <small style="color: #888;">Set to 0 to play full song</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Volume (0 - 100)</label>
+                            <input type="range" id="music-volume" min="0" max="100" value="50" style="width: 100%;">
+                            <span id="volume-display"
+                                style="float: right; font-weight: bold; color: #d4af37;">50%</span>
+                        </div>
+
+                        <button type="button" id="btn-preview-loop" class="btn-secondary"
+                            style="width: 100%; margin-top: 10px;">🔄 Test Loop (Previews 5s before End Time)</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <div id="toast" class="toast hidden">Saved Successfully!</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="admin.js"></script>
+</body>
+
+</html>

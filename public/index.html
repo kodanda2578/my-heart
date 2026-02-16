@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Love Story</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Open+Sans:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<!-- WATERMARK MOVED TO VIBES SECTION -->
+
+<!-- SCROLLING WATERMARK -->
+<img src="fixed_watermark.png" class="scrolling-watermark" alt="">
+
+<!-- HEARTS CONTAINER -->
+<div class="hearts-container"></div>
+
+<!-- 1) HERO SECTION -->
+<section id="hero" class="hero-section">
+    <div id="hero-media-container" class="hero-media-fullscreen">
+        <!-- JS injects img or video here -->
+    </div>
+    <div class="overlay"></div>
+    <div class="hero-content fade-in">
+        <h1 id="hero-title" class="main-heading">Loading...</h1>
+        <p id="hero-subtitle" class="subtext"></p>
+        <a href="#how-it-started" id="hero-button" class="btn-glow">Begin Our Journey</a>
+    </div>
+</section>
+
+<!-- 2) HOW IT ALL STARTED -->
+<section id="how-it-started" class="section-padding">
+    <div class="container">
+        <h2 id="story-title" class="section-title">Loading...</h2>
+        <div class="glass-card fade-in-up">
+            <div class="content-split">
+                <div class="text-content">
+                    <p id="story-date" class="date-text editable-text"></p>
+                    <!-- EDIT PARAGRAPH BELOW -->
+                    <p id="story-text" class="story-text editable-text"></p>
+                </div>
+                <div class="image-content">
+                    <img id="story-image" src="" alt="Our First Memory" class="rounded-img shadow-dreamy">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 2.5) ARTISTIC COLLAGE -->
+<section id="collage-section" class="section-padding bg-cream">
+    <div class="container">
+        <h2 class="section-title">Cherished Memories</h2>
+        <div class="collage-frame fade-in-up">
+            <div class="frame-mat">
+                <div class="collage-layout">
+                    <!-- Left Big -->
+                    <div class="photo-slot slot-1">
+                        <div class="photo-inner" id="collage-img-1-container"></div>
+                    </div>
+                    <!-- Right Top -->
+                    <div class="photo-slot slot-2">
+                        <div class="photo-inner" id="collage-img-2-container"></div>
+                    </div>
+                    <!-- Right Bottom -->
+                    <div class="photo-slot slot-3">
+                        <div class="photo-inner" id="collage-img-3-container"></div>
+                    </div>
+                </div>
+                <div class="collage-text">
+                    <h3 id="collage-caption-text" class="script-font"></h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 2.6) LOVE VIBES (Lighting Design) -->
+<section id="love-vibes" class="section-padding">
+    <!-- Background Watermark REMOVED -->
+
+    <div class="container">
+        <h2 class="section-title">Our Vibes</h2>
+        <div class="vibes-grid">
+            <div class="vibe-card">
+                <h3>Laugh</h3>
+            </div>
+            <div class="vibe-card">
+                <h3>Hug</h3>
+            </div>
+            <div class="vibe-card">
+                <h3>Silly</h3>
+            </div>
+            <div class="vibe-card">
+                <h3>Travel</h3>
+            </div>
+            <div class="vibe-card">
+                <h3>Love</h3>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 3) MEMORY TIMELINE -->
+<section id="timeline" class="section-padding bg-cream">
+    <div class="container">
+        <h2 class="section-title">Our Journey</h2>
+        <div id="timeline-container" class="timeline">
+            <!-- Timeline items will be injected here -->
+        </div>
+    </div>
+</section>
+
+<!-- 4) PHOTO GALLERY -->
+<section id="gallery" class="section-padding">
+    <div class="container">
+        <h2 class="section-title">Captured Moments</h2>
+        <div id="gallery-grid" class="gallery-grid">
+            <!-- Gallery items will be injected here -->
+        </div>
+    </div>
+</section>
+
+<!-- 5) SPECIAL LETTER SECTION -->
+<section id="letter" class="section-padding bg-darker">
+    <div class="container">
+        <div class="letter-card glow-border fade-in-up">
+            <h2 id="letter-title" class="script-font">My Dearest...</h2>
+            <div class="typewriter-container">
+                <p id="typing-text" class="letter-body">
+                    <!-- Content will be typed by JS. -->
+                </p>
+                <span class="cursor">|</span>
+            </div>
+            <!-- Hidden source text for the typing effect -->
+            <div id="source-text" style="display:none;"></div>
+        </div>
+    </div>
+</section>
+
+<!-- 6) FUTURE SECTION -->
+<section id="future" class="section-padding">
+    <div class="container text-center">
+        <h2 id="future-title" class="section-title">To Be Continued...</h2>
+        <p id="future-intro" class="future-intro"></p>
+
+        <button id="reveal-btn" class="btn-glow pulse">Open When You Miss Me ❤️</button>
+
+        <div id="hidden-message" class="hidden-content glass-card">
+            <h3 id="secret-title" class="script-font"></h3>
+            <p id="secret-body">
+            </p>
+
+            <div id="secret-video-container" style="display:none; margin-top: 20px;">
+                <video id="secret-video-player" controls
+                    style="width: 100%; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);"></video>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+<!-- FOOTER -->
+<footer>
+    <p>Made with Love ❤️ & Forever</p>
+</footer>
+
+<!-- LIGHTBOX MODAL -->
+<div id="lightbox" class="lightbox">
+    <span class="close-lightbox">&times;</span>
+    <img class="lightbox-content" id="lightbox-img">
+    <video class="lightbox-content" id="lightbox-video" controls style="display:none;"></video>
+    <div id="caption"></div>
+</div>
+
+<!-- AUDIO PLAYER -->
+<audio id="bg-music" loop></audio>
+
+<!-- FLOATING MUSIC BUTTON -->
+<div id="music-control" class="music-floating-btn fade-in">
+    <span class="music-icon">🎶</span>
+    <span class="music-text">Play Our Song</span>
+</div>
+
+<script src="script.js?v=5"></script>
+</body>
+
+</html>

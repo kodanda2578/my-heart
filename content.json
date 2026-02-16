@@ -1,0 +1,111 @@
+{
+  "hero": {
+    "title": "Our Story – From First Hi to Forever",
+    "subtitle": "Every memory with you is my favorite chapter.",
+    "buttonText": "Begin Our Journey",
+    "backgroundImage": "/uploads/1771265333358-962109902.jpg"
+  },
+  "story": {
+    "title": "The Day Everything Changed",
+    "date": "Estimated: September 7, 2025",
+    "text": "manam first new seminar hall loo kallisam .....manam journey akkada start ayyeindhi naku ninu first chudaganne aslaa nuvu nenu close avvtham annukoledhu .....manam oka friends laa start start ayyeindhi.....inka alaa manam journey loo chalaa close ayyam okari okaru relationship looki vacham manam unna almost 6 months lonne chala ante chalaa happy gaa unnam inka illane yenni situation vaachinaa naa nuvu undali ani korukuntunaa .....bangaram nuvu naa thoo unte theliyani happiness entha alaa ante payyeki cheppalenu kani chalaa istame nuvu ante chalaa baa chuskunta neyy naaa bujii bangaram ",
+    "imageUrl": "/uploads/1771150048793-544811776.jpeg"
+  },
+  "timeline": [
+    {
+      "date": "september 19, 2025",
+      "title": "First selfie",
+      "description": "manam idharam first outreach appudu kallisi theeskuna snap ....neku gurthu undhaa selfie theeskundhama ani addigav.....ahh rojuu chalaa baga anipinchindhii nee thoo kani appudu kuda nee thone unna starting ayyeina ahh day naku chala baga nachindhii",
+      "imageUrl": "/uploads/1771174446417-876437638.mp4"
+    },
+    {
+      "date": "November 5, 2025",
+      "title": "First time temple",
+      "description": "Mannam idharam first time temple ki vellinappudu photo ahh roju asla mannam idhariki feeling start ayyeina roju mannam ahh aslaa idharam veltham annukoledhu ......kani ahh tym idharam vellam chalaa rojulu tharwatha nee thoo gudiki vachaa ahh rojuu.......",
+      "imageUrl": "/uploads/1771174697787-323902762.jpeg"
+    },
+    {
+      "date": "November 28, 2025",
+      "title": "First outing",
+      "description": "Mannam idharam first bhayyataku vellani appudu krishna barrage dhagraa neeku propose chesa ahh roju manam oka 2hr 30mins akkade unnam idharam ninu first time akkade huge chuskuna krishna barrage dhagraa .....",
+      "imageUrl": "/uploads/1771174884605-954404240.jpeg"
+    },
+    {
+      "date": "December 9, 2025",
+      "title": "Lifelong memory",
+      "description": "Manam first time idharam entha gannoo wait chesina trip mumbai edhi aeithey life long gurthu undi pooye memory aslaa manam first mumbai loo theeskuna photo edhi .....",
+      "imageUrl": "/uploads/1771175117149-58078844.jpeg"
+    },
+    {
+      "title": "Future goal ",
+      "date": "December 9, 2025",
+      "description": "Manna favourite and manna future dream ee photo ....elanti photo theeskunam ante nuvey main reason ah roju nuvu kani naa pakkaki vachee undakapooye unte elanti photo undidhey kadhu .....kani neeku korikaa oka buddodu kavali ani ee photo aeithey ippudu chala saaruluu open cheskuna ninu miss ayyeina prathisari ee photo chuskunta nuvu gurthu vachinaa prathi sari first open chesina photo edhi mannam mumbai trip ki ee oka memory",
+      "imageUrl": "/uploads/1771175208326-749109300.jpeg"
+    }
+  ],
+  "gallery": [
+    {
+      "caption": "Your beautiful smile",
+      "imageUrl": "/uploads/1771175591978-196573191.jpeg"
+    },
+    {
+      "caption": "Uncontrollable laughter",
+      "imageUrl": "/uploads/1771175563686-66899732.jpeg"
+    },
+    {
+      "caption": "Warmest hugs",
+      "imageUrl": "/uploads/1771175772330-308086936.jpg"
+    },
+    {
+      "caption": "Being silly together",
+      "imageUrl": "https://placehold.co/300x300/e6ccff/fff?text=Silly"
+    },
+    {
+      "caption": "Exploring the world",
+      "imageUrl": "/uploads/1771175606598-404743079.jpeg"
+    },
+    {
+      "caption": "Pure love",
+      "imageUrl": "/uploads/1771175614333-632485503.jpeg"
+    }
+  ],
+  "letter": {
+    "title": "My Bangaram......",
+    "text": "I wanted to take a moment to tell you how much you mean to me. You are my rock, my joy, and my best friend. Every day with you feels like a dream I never want to wake up from. Thank you for being you. I love you more than words can say."
+  },
+  "future": {
+    "title": "To Be Continued...",
+    "intro": "Our story is just beginning. I have a little secret for you.",
+    "buttonText": "Open When You Miss Me ❤️",
+    "password": "1234",
+    "secretTitle": "Only nee kosame e video ",
+    "secretMessage": "Whenever you feel lonely, just remember that you are always in my heart. Distance means so little when someone means so much. Call me, text me, I'm always here for you. <br><br> <strong>I Love You!</strong>",
+    "secretVideoUrl": "/uploads/1771139568346-862229177.mp4"
+  },
+  "collage": {
+    "caption": "Ramesh and prasanna",
+    "images": [
+      "/uploads/1771149987843-741426654.jpg",
+      "/uploads/1771150000611-849407183.jpg",
+      "/uploads/1771150011230-774496989.jpg"
+    ]
+  },
+  "emotionalVideo": {
+    "title": "ramesh",
+    "message": "hii ",
+    "videoUrl": ""
+  },
+  "vibes": {
+    "vibe1": "/uploads/1771150114593-284575746.jpg",
+    "vibe2": "/uploads/1771150131096-313989485.jpg",
+    "vibe3": "/uploads/1771150142744-512838794.jpg",
+    "vibe4": "/uploads/1771150152120-830974702.jpg",
+    "vibe5": "/uploads/1771150160936-67595992.jpg"
+  },
+  "music": {
+    "url": "",
+    "startTime": "0",
+    "endTime": "30",
+    "volume": "50"
+  }
+}

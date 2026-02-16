@@ -1,0 +1,7 @@
+node_modules
+.env
+.DS_Store
+*.log
+public/uploads/1771089455169-905738423.mp4
+public/uploads/1771139568346-862229177.mp4
+public/uploads/1771089491042-736388276.mp4
