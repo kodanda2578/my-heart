@@ -138,17 +138,26 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('image', file);
 
             fetch('/api/upload', { method: 'POST', body: formData })
-                .then(r => r.json())
+                .then(r => r.text().then(text => {
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        throw new Error("Server returned non-JSON response (likely Vercel Read-Only Error). Please use Localhost.");
+                    }
+                }))
                 .then(data => {
                     if (data.url) {
                         if (urlInput) urlInput.value = data.url;
                         updatePreview(previewId, data.url);
                         showToast('Upload Successful!');
+                    } else if (data.error) {
+                        throw new Error(data.error);
                     }
                 })
                 .catch(err => {
-                    console.error(err);
+                    console.error('Upload Error:', err);
                     showToast('Upload Failed', true);
+                    alert("⚠️ UPLOAD FAILED ⚠️\n\nIf you are on Vercel/Live Site: You CANNOT upload files here.\nPlease use the Local Admin Panel (http://localhost:3000/admin) to upload photos.");
                 })
                 .finally(() => {
                     if (pText) pText.textContent = originalText;
@@ -436,7 +445,10 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('image', blob, 'hero-image.jpg'); // Rename to ensure correct type
             heroUploadBtn.textContent = "Uploading...";
             fetch('/api/upload', { method: 'POST', body: formData })
-                .then(r => r.json())
+                .then(r => r.text().then(text => {
+                    try { return JSON.parse(text); }
+                    catch (e) { throw new Error("Server returned non-JSON. Use Localhost."); }
+                }))
                 .then(data => {
                     if (data.url) {
                         const heroBgInput = document.getElementById('hero-backgroundImage');
@@ -446,11 +458,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         const timestampedUrl = `${data.url}?t=${new Date().getTime()}`;
                         updatePreview('hero-image-preview', timestampedUrl);
                         showToast('Hero Image Updated!');
-                    }
+                    } else { throw new Error(data.error); }
                 })
                 .catch(err => {
                     console.error('Upload failed:', err);
-                    alert('Upload failed: ' + err.message);
+                    alert('⚠️ Upload Failed: You are likely on the Live Site.\nPlease use http://localhost:3000/admin to upload photos.');
                 })
                 .finally(() => heroUploadBtn.textContent = "📁 Upload New Photo");
         }).catch(err => {
@@ -482,16 +494,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append('image', blob, `collage-${num}.jpg`);
                     newBtn.textContent = "Uploading...";
                     fetch('/api/upload', { method: 'POST', body: formData })
-                        .then(r => r.json())
+                        .then(r => r.text().then(text => {
+                            try { return JSON.parse(text); }
+                            catch (e) { throw new Error("Server returned non-JSON. Use Localhost."); }
+                        }))
                         .then(data => {
                             if (data.url) {
                                 document.getElementById(`collage-url-${num}`).value = data.url;
                                 const timestampedUrl = `${data.url}?t=${new Date().getTime()}`;
                                 updatePreview(`collage-preview-${num}`, timestampedUrl);
                                 showToast(`Photo ${num} Uploaded!`);
-                            }
+                            } else { throw new Error(data.error); }
                         })
-                        .catch(err => console.error('Upload failed:', err))
+                        .catch(err => {
+                            console.error('Upload failed:', err);
+                            alert('⚠️ Upload Failed: You are likely on the Live Site.\nPlease use http://localhost:3000/admin to upload photos.');
+                        })
                         .finally(() => newBtn.textContent = `📁 Upload Photo ${num}`);
                 }).catch(err => console.log(err));
             });
@@ -519,16 +537,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append('image', blob, `vibe-${num}.jpg`);
                     newBtn.textContent = "Uploading...";
                     fetch('/api/upload', { method: 'POST', body: formData })
-                        .then(r => r.json())
+                        .then(r => r.text().then(text => {
+                            try { return JSON.parse(text); }
+                            catch (e) { throw new Error("Server returned non-JSON. Use Localhost."); }
+                        }))
                         .then(data => {
                             if (data.url) {
                                 document.getElementById(`vibe-url-${num}`).value = data.url;
                                 const timestampedUrl = `${data.url}?t=${new Date().getTime()}`;
                                 updatePreview(`vibe-preview-${num}`, timestampedUrl);
                                 showToast(`Vibe ${num} Uploaded!`);
-                            }
+                            } else { throw new Error(data.error); }
                         })
-                        .catch(err => console.error('Upload failed:', err))
+                        .catch(err => {
+                            console.error('Upload failed:', err);
+                            alert('⚠️ Upload Failed: You are likely on the Live Site.\nPlease use http://localhost:3000/admin to upload photos.');
+                        })
                         .finally(() => newBtn.textContent = `📁 Upload Photo`);
                 }).catch(err => console.log(err));
             });
@@ -549,7 +573,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             secretVideoUploadBtn.textContent = "Uploading...";
             fetch('/api/upload', { method: 'POST', body: formData })
-                .then(r => r.json())
+                .then(r => r.text().then(text => {
+                    try { return JSON.parse(text); }
+                    catch (e) { throw new Error("Server returned non-JSON. Use Localhost."); }
+                }))
                 .then(data => {
                     if (data.url) {
                         const hiddenInput = document.getElementById('future-videoUrl');
@@ -561,7 +588,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             videoPreview.style.display = 'block';
                         }
                         showToast("Secret Video Uploaded!");
-                    }
+                    } else { throw new Error(data.error); }
+                })
+                .catch(err => {
+                    console.error('Upload failed:', err);
+                    alert('⚠️ Upload Failed: You are likely on the Live Site.\nPlease use http://localhost:3000/admin to upload video.');
                 })
                 .finally(() => secretVideoUploadBtn.textContent = "📁 Upload Secret Video");
         });
@@ -665,16 +696,20 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('file', this.files[0]);
 
             fetch('/api/upload-audio', { method: 'POST', body: formData })
-                .then(r => r.json())
+                .then(r => r.text().then(text => {
+                    try { return JSON.parse(text); }
+                    catch (e) { throw new Error("Server returned non-JSON. Use Localhost."); }
+                }))
                 .then(data => {
                     if (data.url) {
                         musicUrlInput.value = data.url;
                         musicAudio.src = data.url;
                         showToast("Music Uploaded!");
-                    }
+                    } else { throw new Error(data.error); }
                 })
                 .catch(err => {
-                    console.error(err);
+                    console.error('Upload failed:', err);
+                    alert('⚠️ Upload Failed: You are likely on the Live Site.\nPlease use http://localhost:3000/admin to upload music.');
                     showToast("Upload Failed", true);
                 })
                 .finally(() => btn.textContent = originalText);

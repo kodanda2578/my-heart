@@ -82,6 +82,15 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    if (err instanceof multer.MulterError) {
+        return res.status(500).json({ error: 'Upload failed (Multer error): ' + err.message });
+    }
+    res.status(500).json({ error: 'Internal Server Error: ' + err.message });
+});
+
 // Start Server
 app.listen(PORT, () => {
     // Colors for terminal
