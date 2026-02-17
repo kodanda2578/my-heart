@@ -3,13 +3,13 @@
     "title": "Our Story – From First Hi to Forever",
     "subtitle": "Every memory with you is my favorite chapter.",
     "buttonText": "Begin Our Journey",
-    "backgroundImage": "/uploads/1771265333358-962109902.jpg"
+    "backgroundImage": "/uploads/1771294380938-295715124.jpg"
   },
   "story": {
     "title": "The Day Everything Changed",
     "date": "Estimated: September 7, 2025",
     "text": "manam first new seminar hall loo kallisam .....manam journey akkada start ayyeindhi naku ninu first chudaganne aslaa nuvu nenu close avvtham annukoledhu .....manam oka friends laa start start ayyeindhi.....inka alaa manam journey loo chalaa close ayyam okari okaru relationship looki vacham manam unna almost 6 months lonne chala ante chalaa happy gaa unnam inka illane yenni situation vaachinaa naa nuvu undali ani korukuntunaa .....bangaram nuvu naa thoo unte theliyani happiness entha alaa ante payyeki cheppalenu kani chalaa istame nuvu ante chalaa baa chuskunta neyy naaa bujii bangaram ",
-    "imageUrl": "/uploads/1771150048793-544811776.jpeg"
+    "imageUrl": "/uploads/1771272715458-623906759.jpeg"
   },
   "timeline": [
     {
@@ -58,7 +58,7 @@
     },
     {
       "caption": "Being silly together",
-      "imageUrl": "https://placehold.co/300x300/e6ccff/fff?text=Silly"
+      "imageUrl": "/uploads/1771273113536-518837001.jpg"
     },
     {
       "caption": "Exploring the world",
@@ -80,14 +80,14 @@
     "password": "1234",
     "secretTitle": "Only nee kosame e video ",
     "secretMessage": "Whenever you feel lonely, just remember that you are always in my heart. Distance means so little when someone means so much. Call me, text me, I'm always here for you. <br><br> <strong>I Love You!</strong>",
-    "secretVideoUrl": "/uploads/1771139568346-862229177.mp4"
+    "secretVideoUrl": "/uploads/1771275068179-458019310.mp4"
   },
   "collage": {
     "caption": "Ramesh and prasanna",
     "images": [
-      "/uploads/1771149987843-741426654.jpg",
-      "/uploads/1771150000611-849407183.jpg",
-      "/uploads/1771150011230-774496989.jpg"
+      "/uploads/1771272949671-673739121.jpg",
+      "/uploads/1771272960099-236091144.jpg",
+      "/uploads/1771272969771-529476058.jpg"
     ]
   },
   "emotionalVideo": {
@@ -96,16 +96,16 @@
     "videoUrl": ""
   },
   "vibes": {
-    "vibe1": "/uploads/1771150114593-284575746.jpg",
-    "vibe2": "/uploads/1771150131096-313989485.jpg",
-    "vibe3": "/uploads/1771150142744-512838794.jpg",
-    "vibe4": "/uploads/1771150152120-830974702.jpg",
-    "vibe5": "/uploads/1771150160936-67595992.jpg"
+    "vibe1": "/uploads/1771273021467-914587178.jpg",
+    "vibe2": "/uploads/1771273030774-954004478.jpg",
+    "vibe3": "/uploads/1771273053196-489576505.jpg",
+    "vibe4": "/uploads/1771273063271-115709970.jpg",
+    "vibe5": "/uploads/1771273074202-629649968.jpg"
   },
   "music": {
-    "url": "",
-    "startTime": "0",
-    "endTime": "30",
+    "url": "/uploads/1771296476786-443584198.mp3",
+    "startTime": "30",
+    "endTime": "250",
     "volume": "50"
   }
 }
