@@ -13,6 +13,21 @@
 </head>
 
 <body>
+    <script type="module">
+        import { auth, onAuthStateChanged, signOut } from "./firebase-config.js";
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = "login.html";
+            }
+        });
+
+        window.logout = () => {
+            signOut(auth).then(() => {
+                window.location.href = "login.html";
+            });
+        };
+    </script>
 
     <!-- CROPPING MODAL -->
     <div id="cropper-modal" class="cropper-modal" style="display: none;">
@@ -40,6 +55,8 @@
             <li class="nav-item" data-target="view-letter">Letter & Secret</li>
             <li class="nav-item" data-target="view-vibes">Our Vibes</li>
             <li class="nav-item" data-target="view-music">Background Music</li>
+            <li class="nav-item" onclick="logout()" style="color: #ef4444; margin-top: 20px; cursor: pointer;">Start
+                Logout -></li>
         </ul>
         <div class="actions">
             <a href="/" target="_blank" class="btn-preview">↗ Open Website</a>
@@ -364,7 +381,7 @@
     <div id="toast" class="toast hidden">Saved Successfully!</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    <script src="admin.js"></script>
+    <script type="module" src="admin.js"></script>
 </body>
 
 </html>

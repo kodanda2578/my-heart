@@ -1,439 +1,349 @@
-document.addEventListener('DOMContentLoaded', () => {
+import { db, doc, getDoc } from "./firebase-config.js";
 
-    /* --- MUSIC PLAYBACK LOGIC (Moved to top for hoisting) --- */
-    const audio = document.getElementById('bg-music');
-    const musicBtn = document.getElementById('music-control');
-    let musicSettings = { startTime: 0, endTime: 0, volume: 50 };
-    let isPlaying = false;
+document.addEventListener('DOMContentLoaded', async () => {
 
-    function loadMusicSettings(settings) {
-        if (!audio || !musicBtn) return;
+    // --- 1. FETCH CONTENT FROM FIRESTORE ---
+    const CONTENT_DOC_ID = "main";
+    let siteData = {};
 
-        if (!settings || !settings.url) {
-            musicBtn.style.display = 'none';
-            return;
-        }
+    try {
+        const docRef = doc(db, "content", CONTENT_DOC_ID);
+        const docSnap = await getDoc(docRef);
+        console.log("Firestore Auth Check:", db.app.options.projectId);
 
-        console.log("Loading music settings:", settings);
-        musicBtn.style.display = 'flex';
-        audio.src = settings.url;
-        audio.volume = (settings.volume || 50) / 100;
-        musicSettings = settings;
-        audio.currentTime = parseFloat(settings.startTime) || 0;
-    }
-
-    if (audio && musicBtn) {
-        const musicIcon = musicBtn.querySelector('.music-icon');
-        const musicText = musicBtn.querySelector('.music-text');
-
-        // Loop Logic
-        audio.addEventListener('timeupdate', () => {
-            const endTime = parseFloat(musicSettings.endTime) || 0;
-            if (endTime > 0 && audio.currentTime >= endTime) {
-                audio.currentTime = parseFloat(musicSettings.startTime) || 0;
-                audio.play();
-            }
-        });
-
-        // Play/Pause Toggle
-        musicBtn.addEventListener('click', () => {
-            if (isPlaying) {
-                audio.pause();
-                isPlaying = false;
-                musicBtn.classList.remove('playing');
-                musicIcon.textContent = "🎶";
-                musicText.textContent = "Play Our Song";
-            } else {
-                audio.play().then(() => {
-                    isPlaying = true;
-                    musicBtn.classList.add('playing');
-                    musicIcon.textContent = "⏸️";
-                    musicText.textContent = "Pause Music";
-                }).catch(err => console.error("Audio play failed:", err));
-            }
-        });
-    }
-
-    /* --- HELPER: RENDER MEDIA --- */
-
-    function renderMedia(url, alt, className = "") {
-        if (!url) return '';
-        const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i);
-        if (isVideo) {
-            return `<video src="${url}" class="${className}" autoplay muted loop playsinline></video>`;
+        if (docSnap.exists()) {
+            siteData = docSnap.data();
+            console.log("Site data loaded:", siteData);
+            renderContent(siteData);
+            // Initialize Music after content load
+            if (siteData.music) initMusicSystem(siteData.music);
         } else {
-            return `<img src="${url}" alt="${alt}" class="${className}">`;
+            console.log("No content found in Firestore!");
         }
+    } catch (error) {
+        console.error("Error fetching content:", error);
     }
 
+    // --- 2. RENDER CONTENT TO UI ---
+    function renderContent(data) {
+        // Helper to safely set text/src
+        const setText = (id, text) => { if (data && text) document.getElementById(id).innerText = text; };
+        const setSrc = (id, src) => {
+            const el = document.getElementById(id);
+            if (el && src) {
+                el.src = src;
+                el.style.display = 'block';
+            }
+        };
 
-    /* --- 0. INITIALIZE OBSERVERS & FETCH DATA --- */
-    initObservers(); // Run immediately so static content (like "Loading...") is visible
-    initTypingEffect();
+        // Hero
+        if (data.hero) {
+            setText('hero-title', data.hero.title);
+            setText('hero-subtitle', data.hero.subtitle);
+            setText('hero-btn', data.hero.buttonText);
 
-    fetch('/api/content')
-        .then(response => response.json())
-        .then(data => {
-            if (!data || Object.keys(data).length === 0) return;
+            const heroSection = document.querySelector('.hero');
+            if (data.hero.backgroundImage) {
+                // Determine if video or image
+                if (data.hero.backgroundImage.match(/\.(mp4|webm|ogg|mov)$/i)) {
+                    // Create video background if not exists
+                    let videoBg = heroSection.querySelector('.hero-video-bg');
+                    if (!videoBg) {
+                        videoBg = document.createElement('video');
+                        videoBg.className = 'hero-video-bg';
+                        videoBg.autoplay = true;
+                        videoBg.muted = true;
+                        videoBg.loop = true;
+                        videoBg.playsInline = true;
+                        videoBg.style.position = 'absolute';
+                        videoBg.style.top = '0';
+                        videoBg.style.left = '0';
+                        videoBg.style.width = '100%';
+                        videoBg.style.height = '100%';
+                        videoBg.style.objectFit = 'cover';
+                        videoBg.style.zIndex = '-1';
+                        heroSection.insertBefore(videoBg, heroSection.firstChild);
+                    }
+                    videoBg.src = data.hero.backgroundImage;
+                } else {
+                    heroSection.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('${data.hero.backgroundImage}')`;
+                }
+            }
+        }
 
-            // Hero
-            if (data.hero) {
-                document.getElementById('hero-title').textContent = data.hero.title;
-                document.getElementById('hero-subtitle').textContent = data.hero.subtitle;
-                document.getElementById('hero-button').textContent = data.hero.buttonText;
+        // Story
+        if (data.story) {
+            setText('story-title', data.story.title);
+            setText('story-date', data.story.date);
+            setText('story-text', data.story.text);
 
-                if (data.hero.backgroundImage) {
-                    const container = document.getElementById('hero-media-container');
-                    if (container) {
-                        container.innerHTML = renderMedia(data.hero.backgroundImage, "Hero Background");
+            const storyImgContainer = document.querySelector('.story-img');
+            if (data.story.imageUrl && storyImgContainer) {
+                if (data.story.imageUrl.match(/\.(mp4|webm|ogg|mov)$/i)) {
+                    storyImgContainer.innerHTML = `<video src="${data.story.imageUrl}" autoplay muted loop playsinline></video>`;
+                } else {
+                    storyImgContainer.innerHTML = `<img src="${data.story.imageUrl}" alt="Our Story">`;
+                }
+            }
+        }
+
+        // Timeline
+        const timelineContainer = document.querySelector('.timeline');
+        if (timelineContainer && data.timeline) {
+            timelineContainer.innerHTML = ''; // Clear defaults
+            data.timeline.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = `timeline-item ${index % 2 === 0 ? 'left' : 'right'}`;
+
+                let mediaHtml = '';
+                if (item.imageUrl) {
+                    if (item.imageUrl.match(/\.(mp4|webm|ogg|mov)$/i)) {
+                        mediaHtml = `<video src="${item.imageUrl}" autoplay muted loop playsinline onclick="openLightbox('${item.imageUrl}', true)"></video>`;
+                    } else {
+                        mediaHtml = `<img src="${item.imageUrl}" alt="${item.title}" onclick="openLightbox('${item.imageUrl}')">`;
                     }
                 }
+
+                div.innerHTML = `
+                    <div class="content glow-box">
+                        <h3>${item.title}</h3>
+                        <span class="date">${item.date}</span>
+                        <p>${item.description}</p>
+                        ${mediaHtml}
+                    </div>
+                `;
+                timelineContainer.appendChild(div);
+            });
+            initItemAnimations(); // Re-trigger observers
+        }
+
+        // Gallery
+        const galleryGrid = document.querySelector('.gallery-grid');
+        if (galleryGrid && data.gallery) {
+            galleryGrid.innerHTML = '';
+            data.gallery.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'gallery-item glow-box';
+                div.innerHTML = `
+                    <img src="${item.imageUrl}" alt="${item.caption}" onclick="openLightbox('${item.imageUrl}')">
+                    <p style="text-align: center; padding: 10px; font-family: 'Poppins', sans-serif;">${item.caption}</p>
+                `;
+                galleryGrid.appendChild(div);
+            });
+            initItemAnimations();
+        }
+
+        // Collage
+        if (data.collage) {
+            setText('collage-caption', data.collage.caption);
+            if (data.collage.images && data.collage.images.length === 3) {
+                setSrc('collage-img-1', data.collage.images[0]);
+                setSrc('collage-img-2', data.collage.images[1]);
+                setSrc('collage-img-3', data.collage.images[2]);
             }
+        }
 
-            // Story
-            if (data.story) {
-                document.getElementById('story-title').textContent = data.story.title;
-                document.getElementById('story-date').textContent = data.story.date;
-                document.getElementById('story-text').textContent = data.story.text;
+        // Letter
+        if (data.letter) {
+            setText('letter-title', data.letter.title);
+            // Handle newlines for letter body
+            const letterBody = document.getElementById('letter-body');
+            if (letterBody) letterBody.innerText = data.letter.text;
+        }
 
-                const storyImgContainer = document.querySelector('.image-content');
-                // Replace the hardcoded img with dynamic media
-                if (storyImgContainer && data.story.imageUrl) {
-                    storyImgContainer.innerHTML = renderMedia(data.story.imageUrl, "Our Story", "rounded-img shadow-dreamy");
+        // Future / Secret
+        if (data.future) {
+            setText('future-title', data.future.title);
+            setText('future-intro', data.future.intro);
+            const btn = document.querySelector('.btn-secret');
+            if (btn) btn.innerText = data.future.buttonText;
+
+            // Password logic
+            window.secretPassword = data.future.password; // Store for check
+            window.secretContent = {
+                title: data.future.secretTitle,
+                message: data.future.secretMessage,
+                video: data.future.secretVideoUrl
+            };
+        }
+
+        // Vibes
+        if (data.vibes) {
+            [1, 2, 3, 4, 5].forEach(i => {
+                const card = document.querySelector(`.vibe-card:nth-child(${i})`);
+                if (card && data.vibes[`vibe${i}`]) {
+                    card.style.backgroundImage = `url('${data.vibes[`vibe${i}`]}')`;
+                    card.classList.add('has-image');
                 }
-            }
-
-            // Timeline
-            if (data.timeline && Array.isArray(data.timeline)) {
-                const timelineContainer = document.getElementById('timeline-container');
-                timelineContainer.innerHTML = ''; // Clear loading placeholder
-                data.timeline.forEach((item, index) => {
-                    const side = index % 2 === 0 ? 'left' : 'right';
-                    const anim = index % 2 === 0 ? 'slide-in-left' : 'slide-in-right';
-                    const mediaHtml = renderMedia(item.imageUrl, item.title);
-
-                    const html = `
-                        <div class="timeline-item ${side} ${anim}">
-                            <div class="timeline-content">
-                                <span class="date">${item.date}</span>
-                                <h3>${item.title}</h3>
-                                <p>${item.description}</p>
-                                ${mediaHtml}
-                            </div>
-                        </div>
-                    `;
-                    timelineContainer.insertAdjacentHTML('beforeend', html);
-                });
-            }
-
-            // Gallery
-            if (data.gallery && Array.isArray(data.gallery)) {
-                const galleryGrid = document.getElementById('gallery-grid');
-                galleryGrid.innerHTML = '';
-                data.gallery.forEach(item => {
-                    const mediaHtml = renderMedia(item.imageUrl, item.caption);
-                    const html = `
-                        <div class="gallery-item fade-in">
-                            ${mediaHtml}
-                            <div class="caption">${item.caption}</div>
-                        </div>
-                    `;
-                    galleryGrid.insertAdjacentHTML('beforeend', html);
-                });
-            }
-
-            // Letter
-            if (data.letter) {
-                document.getElementById('letter-title').textContent = data.letter.title;
-                document.getElementById('source-text').innerHTML = data.letter.text;
-                // Note: typeWriter uses source-text content
-            }
-
-            // Future
-            if (data.future) {
-                document.getElementById('future-title').textContent = data.future.title;
-                document.getElementById('future-intro').textContent = data.future.intro;
-                document.getElementById('reveal-btn').textContent = data.future.buttonText;
-                document.getElementById('secret-title').textContent = data.future.secretTitle;
-                document.getElementById('secret-body').innerHTML = data.future.secretMessage;
-
-                // Store password and video for checking later
-                window.secretPassword = data.future.password;
-                window.secretVideoUrl = data.future.secretVideoUrl;
-            }
-
-            // Collage
-            if (data.collage) {
-                const captionEl = document.getElementById('collage-caption-text');
-                if (captionEl) captionEl.textContent = data.collage.caption || "Cherished Memories";
-
-                if (data.collage.images && Array.isArray(data.collage.images)) {
-                    // Update 3 slots
-                    [0, 1, 2].forEach(index => {
-                        const container = document.getElementById(`collage-img-${index + 1}-container`);
-                        if (container && data.collage.images[index]) {
-                            container.innerHTML = renderMedia(data.collage.images[index], `Collage Photo ${index + 1}`);
-                        }
-                    });
-                }
-            }
-
-
-            // Vibes
-            if (data.vibes) {
-                const vibeCards = document.querySelectorAll('.vibe-card');
-                if (vibeCards.length >= 5) {
-                    [1, 2, 3, 4, 5].forEach((num, index) => {
-                        const url = data.vibes[`vibe${num}`];
-                        if (url) {
-                            vibeCards[index].style.backgroundImage = `url('${url}')`;
-                            vibeCards[index].style.backgroundSize = 'cover';
-                            vibeCards[index].style.backgroundPosition = 'center';
-                            // Add a dark overlay so text pops
-                            vibeCards[index].style.boxShadow = 'inset 0 0 0 2000px rgba(0,0,0,0.3)';
-                        }
-                    });
-                }
-            }
-
-            // MUSIC (Integrated)
-            if (data.music) {
-                loadMusicSettings(data.music);
-            }
-
-
-
-            /* --- RE-INITIALIZE OBSERVERS AFTER DOM UPDATES --- */
-            initObservers();
-            initTypingEffect(); // Start observing for typing effect
-        })
-
-        .catch(err => {
-            console.error('Error loading content:', err);
-            // Ensure content is visible even if fetch fails
-            initObservers();
-            document.getElementById('hero-title').textContent = "Welcome";
-            document.getElementById('hero-subtitle').textContent = "Music Playback & Content System";
-        });
-
-
-    /* --- 1. FALLING HEARTS ANIMATION --- */
-    function createHeart() {
-        const container = document.querySelector('.hearts-container');
-        if (!container) return; // Guard clause
-
-        const heart = document.createElement('div');
-        heart.classList.add('heart');
-        heart.innerHTML = '❤';
-        heart.style.left = Math.random() * 100 + 'vw';
-        heart.style.animationDuration = Math.random() * 5 + 10 + 's'; // 10-15s duration (Slow Motion)
-        heart.style.fontSize = Math.random() * 20 + 10 + 'px';
-
-        container.appendChild(heart);
-
-        setTimeout(() => { heart.remove(); }, 16000); // Cleanup after animation
+            });
+        }
     }
-    setInterval(createHeart, 800); // Spawn less frequently
 
-    /* --- 1.5 CURSOR TRAIL --- */
-    document.addEventListener('mousemove', function (e) {
-        const heart = document.createElement('span');
-        heart.classList.add('cursor-heart');
-        heart.innerHTML = '❤️';
-        heart.style.left = e.pageX + 'px';
-        heart.style.top = e.pageY + 'px';
-        const size = Math.random() * 10 + 10;
-        heart.style.fontSize = size + 'px';
-        document.body.appendChild(heart);
-        setTimeout(() => { heart.remove(); }, 1000);
-    });
+    // --- 3. ANIMATIONS & INTERACTIONS ---
 
-    /* --- 2. SMOOTH SCROLL --- */
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) target.scrollIntoView({ behavior: 'smooth' });
-        });
-    });
-
-    /* --- 3. SCROLL ANIMATIONS --- */
-    function initObservers() {
-        const observerOptions = { threshold: 0.15 };
-        const observer = new IntersectionObserver((entries, observer) => {
+    function initItemAnimations() {
+        const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('visible');
-                    observer.unobserve(entry.target);
                 }
             });
-        }, observerOptions);
+        }, { threshold: 0.1 });
 
-        document.querySelectorAll('.fade-in, .fade-in-up, .slide-in-left, .slide-in-right').forEach(el => {
+        document.querySelectorAll('.timeline-item, .gallery-item, .vibe-card, .letter-content').forEach(el => {
             observer.observe(el);
         });
     }
 
-    /* --- 4. TYPING EFFECT --- */
-    function initTypingEffect() {
-        const letterCard = document.querySelector('.letter-card');
-        if (!letterCard) return;
-
-        const letterObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting && !window.typingStarted) {
-                    window.typingStarted = true;
-                    typeWriter();
-                }
-            });
-        }, { threshold: 0.5 });
-
-        letterObserver.observe(letterCard);
-    }
-
-    function typeWriter() {
-        const textElement = document.getElementById('typing-text');
-        const sourceElement = document.getElementById('source-text');
-        if (!textElement || !sourceElement) return;
-
-        const sourceText = sourceElement.innerText.trim().replace(/\s+/g, ' ');
-        let charIndex = 0;
-
-        function type() {
-            if (charIndex < sourceText.length) {
-                textElement.innerHTML += sourceText.charAt(charIndex);
-                charIndex++;
-                setTimeout(type, 50);
-            } else {
-                const cursor = document.querySelector('.cursor');
-                if (cursor) cursor.style.display = 'none';
-            }
-        }
-        type();
-    }
-
-    /* --- 5. PASSWORD REVEAL --- */
-    const revealBtn = document.getElementById('reveal-btn');
-    const hiddenMessage = document.getElementById('hidden-message');
-
-    if (revealBtn) {
-        revealBtn.addEventListener('click', () => {
-            let password = prompt("What is the secret password?");
-            let correctPassword = window.secretPassword || 'love'; // Fallback
-
-            if (password && password.toLowerCase().trim() === correctPassword.toLowerCase()) {
-                alert("Correct! ❤️");
-                hiddenMessage.style.display = 'block';
-                revealBtn.style.display = 'none';
-
-                // Show Secret Video if available
-                if (window.secretVideoUrl) {
-                    const videoContainer = document.getElementById('secret-video-container');
-                    const videoPlayer = document.getElementById('secret-video-player');
-                    if (videoContainer && videoPlayer) {
-                        videoContainer.style.display = 'block';
-                        videoPlayer.src = window.secretVideoUrl;
-                        videoPlayer.play().catch(e => console.log("Autoplay blocked", e));
-                    }
-                }
-
-                setTimeout(() => {
-                    hiddenMessage.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
-            } else if (password !== null) {
-                alert("Oops! That's not it. Try again!");
-            }
-        });
-    }
-
-    /* --- 6. LIGHTBOX LOGIC --- */
+    // Modal / Lightbox Logic
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightbox-img');
     const lightboxVideo = document.getElementById('lightbox-video');
-    const captionText = document.getElementById('caption');
-    const closeBtn = document.querySelector('.close-lightbox');
+    const closeLightbox = document.querySelector('.close-lightbox');
 
-    if (lightbox && lightboxImg && lightboxVideo && closeBtn) {
-        // Delegate event listener for dynamic content
-        document.body.addEventListener('click', (e) => {
-            // Check if clicked element is an image or video (excluding lightbox itself)
-            const isImg = e.target.tagName === 'IMG';
-            const isVideo = e.target.tagName === 'VIDEO';
+    window.openLightbox = (src, isVideo = false) => {
+        lightbox.style.display = 'flex';
+        if (isVideo) {
+            lightboxImg.style.display = 'none';
+            lightboxVideo.style.display = 'block';
+            lightboxVideo.src = src;
+        } else {
+            lightboxVideo.style.display = 'none';
+            lightboxVideo.pause();
+            lightboxImg.style.display = 'block';
+            lightboxImg.src = src;
+        }
+    };
 
-            if ((isImg || isVideo) && !e.target.closest('.lightbox')) {
-                lightbox.style.display = "block";
-
-                if (isImg) {
-                    lightboxImg.src = e.target.src;
-                    lightboxImg.style.display = 'block';
-                    lightboxVideo.style.display = 'none';
-                    lightboxVideo.pause();
-                    captionText.innerHTML = e.target.alt || "";
-                } else if (isVideo) {
-                    lightboxVideo.src = e.target.src;
-                    lightboxVideo.style.display = 'block';
-                    lightboxImg.style.display = 'none';
-                    // Auto-play safely
-                    lightboxVideo.play().catch(err => console.log('Autoplay blocked:', err));
-                    captionText.innerHTML = ""; // Videos might not have alt
-                }
-            }
+    if (closeLightbox) {
+        closeLightbox.addEventListener('click', () => {
+            lightbox.style.display = 'none';
+            lightboxVideo.pause();
         });
+    }
 
-        // Close when clicking X
-        closeBtn.onclick = function () {
-            lightbox.style.display = "none";
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) {
+            lightbox.style.display = 'none';
             lightboxVideo.pause();
         }
+    });
 
-        // Close when clicking outside image
-        lightbox.onclick = function (e) {
-            if (e.target === lightbox) {
-                lightbox.style.display = "none";
-                lightboxVideo.pause();
-            }
-        }
-
-        // Close on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === "Escape") {
-                lightbox.style.display = "none";
-                lightboxVideo.pause();
+    // Secret Section Logic
+    const secretBtn = document.querySelector('.btn-secret');
+    if (secretBtn) {
+        secretBtn.addEventListener('click', () => {
+            const userPass = prompt("Enter the secret password:");
+            if (userPass === window.secretPassword) {
+                // Reveal Secret
+                const container = document.querySelector('.future-container');
+                container.innerHTML = `
+                    <div class="secret-reveal glow-box" style="animation: fadeIn 1s forwards;">
+                        <h2>${window.secretContent.title}</h2>
+                        <div style="margin: 20px 0;">${window.secretContent.message}</div>
+                        ${window.secretContent.video ? `
+                        <div class="video-wrapper">
+                            <video src="${window.secretContent.video}" controls style="width:100%; border-radius:10px; box-shadow: 0 0 20px rgba(139,92,246,0.5);"></video>
+                        </div>` : ''}
+                    </div>
+                `;
+            } else {
+                alert("Incorrect password. This secret remains locked. 🔒");
             }
         });
     }
 
-    /* --- 7. SPOTLIGHT EFFECT (Love Vibes) --- */
-    const cards = document.querySelectorAll(".vibe-card");
-    document.getElementById("love-vibes").onmousemove = e => {
-        for (const card of cards) {
-            const rect = card.getBoundingClientRect(),
-                x = e.clientX - rect.left,
-                y = e.clientY - rect.top;
+    // --- 4. MUSIC SYSTEM ---
+    function initMusicSystem(musicData) {
+        if (!musicData || !musicData.url) return;
 
-            card.style.setProperty("--mouse-x", `${x}px`);
-            card.style.setProperty("--mouse-y", `${y}px`);
-        };
-    };
+        const audio = new Audio(musicData.url);
+        audio.volume = (musicData.volume || 50) / 100;
 
-    // LIGHTBOX FOR VIBE CARDS
-    cards.forEach(card => {
-        card.addEventListener('click', () => {
-            const style = window.getComputedStyle(card);
-            const bgImage = style.backgroundImage;
-            // Extract URL from "url('...')"
-            if (bgImage && bgImage !== 'none') {
-                const url = bgImage.slice(5, -2); // Remove url(" and ")
-                if (url) {
-                    lightbox.style.display = "block";
-                    lightboxImg.src = url;
-                    lightboxImg.classList.add('glowing-img'); // Add glow class
-                    captionText.innerHTML = card.querySelector('h3').innerText;
+        const startTime = parseFloat(musicData.startTime) || 0;
+        const endTime = parseFloat(musicData.endTime) || 0;
+
+        audio.currentTime = startTime;
+
+        // Loop Logic
+        if (endTime > 0 && endTime > startTime) {
+            audio.addEventListener('timeupdate', () => {
+                if (audio.currentTime >= endTime) {
+                    audio.currentTime = startTime;
+                    audio.play();
                 }
+            });
+        } else {
+            audio.loop = true;
+        }
+
+        // Floating Button Logic
+        const musicBtn = document.querySelector('.music-floating-btn');
+        let isPlaying = false;
+
+        if (musicBtn) {
+            musicBtn.style.display = 'flex'; // Show button only if music exists
+            musicBtn.addEventListener('click', () => {
+                if (isPlaying) {
+                    audio.pause();
+                    musicBtn.classList.remove('playing');
+                    musicBtn.innerHTML = '🎵';
+                } else {
+                    audio.play().catch(e => console.log("Autoplay blocked", e));
+                    musicBtn.classList.add('playing');
+                    musicBtn.innerHTML = '⏸️';
+                }
+                isPlaying = !isPlaying;
+            });
+        }
+
+        // Optional: Auto-play interaction (browsers block auto-audio)
+        document.body.addEventListener('click', () => {
+            if (!isPlaying && musicBtn) {
+                // specific behavior if desired, or leave manual
             }
-        });
+        }, { once: true });
+    }
+
+    // --- 5. CURSOR TRAIL ---
+    const coords = { x: 0, y: 0 };
+    const hearts = document.querySelectorAll(".heart");
+
+    // Initial Color Reset
+    hearts.forEach(function (heart) {
+        heart.x = 0;
+        heart.y = 0;
+        heart.style.position = 'fixed';
+        heart.style.pointerEvents = 'none';
+        heart.style.zIndex = '9999';
     });
 
+    window.addEventListener("mousemove", function (e) {
+        coords.x = e.clientX;
+        coords.y = e.clientY;
+    });
 
-    /* --- MUSIC LOGIC MOVED TO TOP --- */
+    function animateHearts() {
+        let x = coords.x;
+        let y = coords.y;
+
+        hearts.forEach(function (heart, index) {
+            heart.style.left = x - 12 + "px";
+            heart.style.top = y - 12 + "px";
+
+            heart.style.opacity = (hearts.length - index) / hearts.length;
+
+            heart.x = x;
+            heart.y = y;
+
+            const nextHeart = hearts[index + 1] || hearts[0];
+            x += (nextHeart.x - x) * 0.3;
+            y += (nextHeart.y - y) * 0.3;
+        });
+
+        requestAnimationFrame(animateHearts);
+    }
+
+    if (hearts.length > 0) animateHearts();
+
 });

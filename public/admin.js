@@ -1,10 +1,11 @@
+import { db, doc, getDoc, setDoc, storage, ref, uploadBytes, getDownloadURL } from "./firebase-config.js";
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- STATE VARIABLES ---
     let currentData = {};
     const saveBtn = document.getElementById('save-btn');
+    const CONTENT_DOC_ID = "main"; // ID for the single content document
 
-    const API_URL = '/api/content';
-    let originalData = {};
     let cropper; // Cropper instance
     const cropperModal = document.getElementById('cropper-modal');
     const cropperImage = document.getElementById('cropper-image');
@@ -18,48 +19,32 @@ document.addEventListener('DOMContentLoaded', () => {
     function openCropper(file) {
         console.log('Opening cropper for file:', file.name);
         return new Promise((resolve, reject) => {
-            // If not an image, bypass cropper and return original file
             if (!file.type.startsWith('image/')) {
-                console.log('File is not an image, bypassing cropper');
                 resolve(file);
                 return;
             }
-
             const reader = new FileReader();
             reader.onload = (e) => {
                 cropperImage.src = e.target.result;
                 cropperModal.style.display = 'flex';
-
-                // Destroy previous instance if exists
                 if (cropper) {
                     cropper.destroy();
                     cropper = null;
                 }
-
-                // Initialize Cropper
                 cropper = new Cropper(cropperImage, {
-                    aspectRatio: NaN, // Free crop
+                    aspectRatio: NaN,
                     viewMode: 1,
                     autoCropArea: 0.8,
                     responsive: true,
                 });
-
-                // Handle Save
                 btnSaveCrop.onclick = () => {
-                    console.log('Crop saved');
-                    if (!cropper) {
-                        reject('Cropper not initialized');
-                        return;
-                    }
+                    if (!cropper) return reject('Cropper not initialized');
                     cropper.getCroppedCanvas().toBlob((blob) => {
                         cropperModal.style.display = 'none';
                         resolve(blob);
                     });
                 };
-
-                // Handle Cancel
                 btnCancelCrop.onclick = () => {
-                    console.log('Crop cancelled');
                     cropperModal.style.display = 'none';
                     reject('Cropping cancelled');
                 };
@@ -68,14 +53,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 1. INITIALIZATION: FETCH CONTENT ---
-    fetch(API_URL)
-        .then(response => response.json())
-        .then(data => {
-            currentData = data;
-            populateForm(data);
-        })
-        .catch(err => console.error('Error fetching data:', err));
+    // --- 1. INITIALIZATION: FETCH CONTENT FROM FIRESTORE ---
+    async function loadContent() {
+        try {
+            const docRef = doc(db, "content", CONTENT_DOC_ID);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                currentData = docSnap.data();
+                populateForm(currentData);
+                console.log("Document data:", currentData);
+            } else {
+                console.log("No such document! Creating usage default...");
+                currentData = {}; // Initialize empty if new
+            }
+        } catch (error) {
+            console.error("Error getting document:", error);
+            showToast("Error loading data", true);
+        }
+    }
+    loadContent();
 
     // --- 2. TAB NAVIGATION LOGIC ---
     const navItems = document.querySelectorAll('.nav-item');
@@ -84,97 +80,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     navItems.forEach(item => {
         item.addEventListener('click', () => {
-            console.log('Clicked nav:', item.textContent);
+            if (item.textContent.includes("Logout")) return;
             navItems.forEach(nav => nav.classList.remove('active'));
             views.forEach(view => view.classList.remove('active'));
             item.classList.add('active');
             const targetId = item.getAttribute('data-target');
-            console.log('Target ID:', targetId);
             const targetEl = document.getElementById(targetId);
             if (targetEl) targetEl.classList.add('active');
-            else console.error('Target element not found:', targetId);
             pageTitle.textContent = item.textContent;
         });
     });
 
-    // --- HELPER: FILE UPLOAD SETUP ---
-    function setupFileUpload(areaId, inputId, urlId, previewId) {
-        const area = document.getElementById(areaId);
-        const input = document.getElementById(inputId);
-        const urlInput = document.getElementById(urlId);
-
-        if (!area || !input) return;
-
-        // Click to open file dialog
-        area.addEventListener('click', () => input.click());
-
-        // File change
-        input.addEventListener('change', () => {
-            const file = input.files[0];
-            if (file) handleUpload(file);
-        });
-
-        // Drag & Drop
-        area.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            area.style.borderColor = '#d4af37';
-        });
-        area.addEventListener('dragleave', () => {
-            area.style.borderColor = '#333';
-        });
-        area.addEventListener('drop', (e) => {
-            e.preventDefault();
-            area.style.borderColor = '#333';
-            const file = e.dataTransfer.files[0];
-            if (file) handleUpload(file);
-        });
-
-        function handleUpload(file) {
-            const pText = area.querySelector('p');
-            const originalText = pText ? pText.textContent : "Uploading...";
-            if (pText) pText.textContent = "Uploading...";
-
-            const formData = new FormData();
-            formData.append('image', file);
-
-            fetch('/api/upload', { method: 'POST', body: formData })
-                .then(r => r.text().then(text => {
-                    try {
-                        return JSON.parse(text);
-                    } catch (e) {
-                        throw new Error("Server returned non-JSON response (likely Vercel Read-Only Error). Please use Localhost.");
-                    }
-                }))
-                .then(data => {
-                    if (data.url) {
-                        if (urlInput) urlInput.value = data.url;
-                        updatePreview(previewId, data.url);
-                        showToast('Upload Successful!');
-                    } else if (data.error) {
-                        throw new Error(data.error);
-                    }
-                })
-                .catch(err => {
-                    console.error('Upload Error:', err);
-                    showToast('Upload Failed', true);
-                    alert("⚠️ UPLOAD FAILED ⚠️\n\nIf you are on Vercel/Live Site: You CANNOT upload files here.\nPlease use the Local Admin Panel (http://localhost:3000/admin) to upload photos.");
-                })
-                .finally(() => {
-                    if (pText) pText.textContent = originalText;
-                });
-        }
-    }
-
-    // --- HELPER: GET MEDIA HTML ---
-    function getMediaPreview(url, id, style = "") {
-        if (!url) {
-            return `<img id="${id}" src="" style="display:none; ${style}">`;
-        }
-        const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i);
-        if (isVideo) {
-            return `<video id="${id}" src="${url}" controls style="${style}"></video>`;
-        } else {
-            return `<img id="${id}" src="${url}" style="${style}">`;
+    // --- HELPER: FIREBASE STORAGE UPLOAD ---
+    async function uploadToFirebase(file, folder = "uploads") {
+        try {
+            const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1E9)}-${file.name || 'image.jpg'}`;
+            const storageRef = ref(storage, `${folder}/${uniqueName}`);
+            const snapshot = await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(snapshot.ref);
+            return url;
+        } catch (error) {
+            console.error("Upload failed:", error);
+            throw error;
         }
     }
 
@@ -182,7 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function updatePreview(id, url) {
         const el = document.getElementById(id);
         if (!el) return;
-
         const parent = el.parentElement;
         const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i);
         const currentTag = el.tagName.toLowerCase();
@@ -213,20 +139,14 @@ document.addEventListener('DOMContentLoaded', () => {
         setVal('hero-subtitle', data.hero?.subtitle);
         setVal('hero-buttonText', data.hero?.buttonText);
         setVal('hero-backgroundImage', data.hero?.backgroundImage);
-        if (data.hero?.backgroundImage) {
-            updatePreview('hero-image-preview', data.hero.backgroundImage);
-        }
+        if (data.hero?.backgroundImage) updatePreview('hero-image-preview', data.hero.backgroundImage);
 
         // Story
         setVal('story-title', data.story?.title);
         setVal('story-date', data.story?.date);
         setVal('story-text', data.story?.text);
-
-        // Story Image Handling
         setVal('story-imageUrl', data.story?.imageUrl);
-        if (data.story?.imageUrl) {
-            updatePreview('story-image-preview', data.story.imageUrl);
-        }
+        if (data.story?.imageUrl) updatePreview('story-image-preview', data.story.imageUrl);
 
         renderTimeline();
         renderGallery();
@@ -234,13 +154,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Collage
         setVal('collage-caption', data.collage?.caption);
         if (data.collage?.images) {
-            // 1
             setVal('collage-url-1', data.collage.images[0]);
             updatePreview('collage-preview-1', data.collage.images[0]);
-            // 2
             setVal('collage-url-2', data.collage.images[1]);
             updatePreview('collage-preview-2', data.collage.images[1]);
-            // 3
             setVal('collage-url-3', data.collage.images[2]);
             updatePreview('collage-preview-3', data.collage.images[2]);
         }
@@ -253,12 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setVal('future-buttonText', data.future?.buttonText);
         setVal('future-password', data.future?.password);
         setVal('future-secretTitle', data.future?.secretTitle);
-        setVal('future-secretTitle', data.future?.secretTitle);
         setVal('future-secretMessage', data.future?.secretMessage);
         setVal('future-videoUrl', data.future?.secretVideoUrl);
-        if (data.future?.secretVideoUrl) {
-            updatePreview('future-video-preview', data.future.secretVideoUrl);
-        }
+        if (data.future?.secretVideoUrl) updatePreview('future-video-preview', data.future.secretVideoUrl);
 
         // Vibes
         if (data.vibes) {
@@ -268,8 +182,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Emotional Video
-
+        // Music
+        if (data.music) {
+            setVal('music-url', data.music.url);
+            setVal('music-startTime', data.music.startTime);
+            setVal('music-endTime', data.music.endTime);
+            setVal('music-volume', data.music.volume);
+            const musicAudio = document.getElementById('music-preview');
+            const volumeDisplay = document.getElementById('volume-display');
+            if (musicAudio && data.music.url) musicAudio.src = data.music.url;
+            if (volumeDisplay && data.music.volume) volumeDisplay.textContent = data.music.volume + "%";
+        }
     }
 
     // --- RENDERERS ---
@@ -342,7 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- GLOBAL ACTIONS ---
     window.removeTimeline = i => { currentData.timeline.splice(i, 1); renderTimeline(); };
     window.removeGallery = i => { currentData.gallery.splice(i, 1); renderGallery(); };
-
     window.updateTimeline = (i, f, v) => currentData.timeline[i][f] = v;
     window.updateGallery = (i, f, v) => currentData.gallery[i][f] = v;
 
@@ -365,244 +287,101 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // GENERIC UPLOAD WITH CROP
+    // --- GENERIC UPLOAD WITH CROP ---
     window.uploadItemImage = (type, index) => {
         const fileInput = document.getElementById(`${type}-file-${index}`);
         if (!fileInput || !fileInput.files[0]) return;
 
-        openCropper(fileInput.files[0]).then(blob => {
+        openCropper(fileInput.files[0]).then(async (blob) => {
             const btn = fileInput.nextElementSibling;
             const originalText = btn.textContent;
             btn.textContent = "Uploading...";
 
-            const formData = new FormData();
-            formData.append('image', blob, `${type}-${index}.jpg`); // Use cropped blob
+            try {
+                const url = await uploadToFirebase(blob, 'uploads');
+                if (type === 'timeline') currentData.timeline[index].imageUrl = url;
+                if (type === 'gallery') currentData.gallery[index].imageUrl = url;
 
-            fetch('/api/upload', { method: 'POST', body: formData })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.url) {
-                        if (type === 'timeline') currentData.timeline[index].imageUrl = data.url;
-                        if (type === 'gallery') currentData.gallery[index].imageUrl = data.url;
-
-                        // Update UI
-                        const urlInput = document.getElementById(`${type}-url-${index}`);
-                        if (urlInput) urlInput.value = data.url;
-
-                        // Add timestamp to force refresh if URL is same
-                        const timestampedUrl = `${data.url}?t=${new Date().getTime()}`;
-                        updatePreview(`${type}-preview-${index}`, timestampedUrl);
-
-                        showToast("Uploaded!");
-                    }
-                })
-                .catch(err => console.error('Upload failed:', err))
-                .finally(() => btn.textContent = originalText);
-
-        }).catch(err => {
-            console.log('Cropping cancelled or failed:', err);
-            // Optionally clear input if cancelled so change event can fire again
-            fileInput.value = '';
+                const urlInput = document.getElementById(`${type}-url-${index}`);
+                if (urlInput) urlInput.value = url;
+                updatePreview(`${type}-preview-${index}`, url);
+                showToast("Uploaded!");
+            } catch (e) {
+                console.error(e);
+                showToast("Upload Failed", true);
+            } finally {
+                btn.textContent = originalText;
+            }
         });
     };
 
-    // STORY UPLOAD
-    const storyUploadBtn = document.getElementById('story-upload-btn');
-    const storyFileInput = document.getElementById('story-file-input');
+    // --- OTHER UPLOADS (Hero, Story, Collage, Vibes, Video, Music) ---
 
-    if (storyUploadBtn && storyFileInput) {
-        storyUploadBtn.addEventListener('click', () => storyFileInput.click());
-        storyFileInput.addEventListener('change', function () {
+    // Generic Handler for Single Elements
+    function setupSingleUpload(btnId, inputId, previewId, hiddenInputId, isCropped = true, customName = null) {
+        const btn = document.getElementById(btnId);
+        const input = document.getElementById(inputId);
+        if (!btn || !input) return;
+
+        btn.addEventListener('click', () => input.click());
+        input.addEventListener('change', async function () {
             if (!this.files[0]) return;
-            const formData = new FormData();
-            formData.append('image', this.files[0]);
+            const originalText = btn.textContent;
 
-            storyUploadBtn.textContent = "Uploading...";
-            fetch('/api/upload', { method: 'POST', body: formData })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.url) {
-                        const hiddenInput = document.getElementById('story-imageUrl');
-                        if (hiddenInput) hiddenInput.value = data.url;
+            const doUpload = async (fileToUpload) => {
+                btn.textContent = "Uploading...";
+                try {
+                    const url = await uploadToFirebase(fileToUpload, 'uploads');
+                    const hidden = document.getElementById(hiddenInputId);
+                    if (hidden) hidden.value = url;
+                    updatePreview(previewId, url);
+                    showToast("Uploaded!");
 
-                        updatePreview('story-image-preview', data.url);
-                        showToast("Uploaded!");
+                    // Specific logic for Audio Preview update
+                    if (previewId === 'music-preview') {
+                        const audioObj = document.getElementById('music-preview');
+                        if (audioObj) audioObj.src = url;
                     }
-                })
-                .finally(() => storyUploadBtn.textContent = "📁 Upload Image");
+
+                } catch (e) {
+                    console.error(e);
+                    showToast("Upload Failed", true);
+                } finally {
+                    btn.textContent = originalText;
+                }
+            };
+
+            if (isCropped) {
+                openCropper(this.files[0]).then(blob => doUpload(blob)).catch(e => console.log(e));
+            } else {
+                doUpload(this.files[0]);
+            }
         });
     }
 
-    // HERO UPLOAD
-    const heroUploadBtn = document.getElementById('hero-upload-btn');
-    const heroInput = document.getElementById('hero-file-input');
+    setupSingleUpload('hero-upload-btn', 'hero-file-input', 'hero-image-preview', 'hero-backgroundImage');
+    setupSingleUpload('story-upload-btn', 'story-file-input', 'story-image-preview', 'story-imageUrl', false); // Story often already good ratio
+    setupSingleUpload('future-video-upload-btn', 'future-video-input', 'future-video-preview', 'future-videoUrl', false);
+    setupSingleUpload('music-upload-btn', 'music-file-input', 'music-preview', 'music-url', false);
 
-    heroUploadBtn.addEventListener('click', () => heroInput.click());
-    heroInput.addEventListener('change', function () {
-        if (!this.files[0]) return;
-        openCropper(this.files[0]).then(blob => {
-            const formData = new FormData();
-            formData.append('image', blob, 'hero-image.jpg'); // Rename to ensure correct type
-            heroUploadBtn.textContent = "Uploading...";
-            fetch('/api/upload', { method: 'POST', body: formData })
-                .then(r => r.text().then(text => {
-                    try { return JSON.parse(text); }
-                    catch (e) { throw new Error("Server returned non-JSON. Use Localhost."); }
-                }))
-                .then(data => {
-                    if (data.url) {
-                        const heroBgInput = document.getElementById('hero-backgroundImage');
-                        if (heroBgInput) heroBgInput.value = data.url;
-
-                        // Add timestamp to bypass browser cache
-                        const timestampedUrl = `${data.url}?t=${new Date().getTime()}`;
-                        updatePreview('hero-image-preview', timestampedUrl);
-                        showToast('Hero Image Updated!');
-                    } else { throw new Error(data.error); }
-                })
-                .catch(err => {
-                    console.error('Upload failed:', err);
-                    alert('⚠️ Upload Failed: You are likely on the Live Site.\nPlease use http://localhost:3000/admin to upload photos.');
-                })
-                .finally(() => heroUploadBtn.textContent = "📁 Upload New Photo");
-        }).catch(err => {
-            console.error('Cropper error:', err);
-            if (err !== 'Cropping cancelled') alert('Error: ' + err);
-        });
-    });
-
-    // COLLAGE UPLOADS (1, 2, 3)
+    // Collages
     [1, 2, 3].forEach(num => {
-        const btn = document.getElementById(`btn-upload-collage-${num}`);
-        const input = document.getElementById(`file-collage-${num}`);
-        if (btn && input) {
-            // Remove old listeners by cloning
-            const newBtn = btn.cloneNode(true);
-            btn.parentNode.replaceChild(newBtn, btn);
-
-            newBtn.addEventListener('click', () => {
-                console.log(`Clicked upload collage ${num}`);
-                input.click();
-            });
-
-            input.addEventListener('change', function () {
-                console.log(`File changed for collage ${num}`);
-                if (!this.files[0]) return;
-                openCropper(this.files[0]).then(blob => {
-                    console.log('Got cropped blob, uploading...');
-                    const formData = new FormData();
-                    formData.append('image', blob, `collage-${num}.jpg`);
-                    newBtn.textContent = "Uploading...";
-                    fetch('/api/upload', { method: 'POST', body: formData })
-                        .then(r => r.text().then(text => {
-                            try { return JSON.parse(text); }
-                            catch (e) { throw new Error("Server returned non-JSON. Use Localhost."); }
-                        }))
-                        .then(data => {
-                            if (data.url) {
-                                document.getElementById(`collage-url-${num}`).value = data.url;
-                                const timestampedUrl = `${data.url}?t=${new Date().getTime()}`;
-                                updatePreview(`collage-preview-${num}`, timestampedUrl);
-                                showToast(`Photo ${num} Uploaded!`);
-                            } else { throw new Error(data.error); }
-                        })
-                        .catch(err => {
-                            console.error('Upload failed:', err);
-                            alert('⚠️ Upload Failed: You are likely on the Live Site.\nPlease use http://localhost:3000/admin to upload photos.');
-                        })
-                        .finally(() => newBtn.textContent = `📁 Upload Photo ${num}`);
-                }).catch(err => console.log(err));
-            });
-        }
+        setupSingleUpload(`btn-upload-collage-${num}`, `file-collage-${num}`, `collage-preview-${num}`, `collage-url-${num}`);
     });
 
-    // VIBES UPLOADS (1-5)
+    // Vibes
     [1, 2, 3, 4, 5].forEach(num => {
-        const btn = document.getElementById(`btn-upload-vibe-${num}`);
-        const input = document.getElementById(`file-vibe-${num}`);
-        if (btn && input) {
-            const newBtn = btn.cloneNode(true);
-            btn.parentNode.replaceChild(newBtn, btn);
-
-            newBtn.addEventListener('click', () => {
-                console.log(`Clicked upload vibe ${num}`);
-                input.click();
-            });
-
-            input.addEventListener('change', function () {
-                console.log(`File changed for vibe ${num}`);
-                if (!this.files[0]) return;
-                openCropper(this.files[0]).then(blob => {
-                    const formData = new FormData();
-                    formData.append('image', blob, `vibe-${num}.jpg`);
-                    newBtn.textContent = "Uploading...";
-                    fetch('/api/upload', { method: 'POST', body: formData })
-                        .then(r => r.text().then(text => {
-                            try { return JSON.parse(text); }
-                            catch (e) { throw new Error("Server returned non-JSON. Use Localhost."); }
-                        }))
-                        .then(data => {
-                            if (data.url) {
-                                document.getElementById(`vibe-url-${num}`).value = data.url;
-                                const timestampedUrl = `${data.url}?t=${new Date().getTime()}`;
-                                updatePreview(`vibe-preview-${num}`, timestampedUrl);
-                                showToast(`Vibe ${num} Uploaded!`);
-                            } else { throw new Error(data.error); }
-                        })
-                        .catch(err => {
-                            console.error('Upload failed:', err);
-                            alert('⚠️ Upload Failed: You are likely on the Live Site.\nPlease use http://localhost:3000/admin to upload photos.');
-                        })
-                        .finally(() => newBtn.textContent = `📁 Upload Photo`);
-                }).catch(err => console.log(err));
-            });
-        }
+        setupSingleUpload(`btn-upload-vibe-${num}`, `file-vibe-${num}`, `vibe-preview-${num}`, `vibe-url-${num}`);
     });
 
 
-    // SECRET VIDEO UPLOAD
-    const secretVideoUploadBtn = document.getElementById('future-video-upload-btn');
-    const secretVideoInput = document.getElementById('future-video-input');
-
-    if (secretVideoUploadBtn && secretVideoInput) {
-        secretVideoUploadBtn.addEventListener('click', () => secretVideoInput.click());
-        secretVideoInput.addEventListener('change', function () {
-            if (!this.files[0]) return;
-            const formData = new FormData();
-            formData.append('image', this.files[0]);
-
-            secretVideoUploadBtn.textContent = "Uploading...";
-            fetch('/api/upload', { method: 'POST', body: formData })
-                .then(r => r.text().then(text => {
-                    try { return JSON.parse(text); }
-                    catch (e) { throw new Error("Server returned non-JSON. Use Localhost."); }
-                }))
-                .then(data => {
-                    if (data.url) {
-                        const hiddenInput = document.getElementById('future-videoUrl');
-                        if (hiddenInput) hiddenInput.value = data.url;
-
-                        const videoPreview = document.getElementById('future-video-preview');
-                        if (videoPreview) {
-                            videoPreview.src = data.url;
-                            videoPreview.style.display = 'block';
-                        }
-                        showToast("Secret Video Uploaded!");
-                    } else { throw new Error(data.error); }
-                })
-                .catch(err => {
-                    console.error('Upload failed:', err);
-                    alert('⚠️ Upload Failed: You are likely on the Live Site.\nPlease use http://localhost:3000/admin to upload video.');
-                })
-                .finally(() => secretVideoUploadBtn.textContent = "📁 Upload Secret Video");
-        });
-    }
-
-    // --- 4. SAVE LOGIC ---
+    // --- 4. SAVE LOGIC (FIRESTORE) ---
     if (saveBtn) {
-        saveBtn.addEventListener('click', (e) => {
+        saveBtn.addEventListener('click', async (e) => {
             e.preventDefault();
+            saveBtn.textContent = "Saving...";
 
+            // Construct Data Object (Same as before)
             const updatedData = {
                 ...currentData,
                 hero: {
@@ -653,100 +432,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             };
 
-            fetch('/api/content', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedData)
-            })
-                .then(response => response.json())
-                .then(result => {
-                    showToast('Saved Successfully!');
-                    currentData = updatedData;
-                    saveBtn.textContent = "💾 Save All Changes";
-                })
-                .catch(err => {
-                    console.error(err);
-                    showToast('Error saving data.', true);
-                    saveBtn.textContent = "💾 Save All Changes";
-                });
-        });
-    }
-
-    // --- BACKGROUND MUSIC LOGIC ---
-    const musicUploadBtn = document.getElementById('music-upload-btn');
-    const musicFileInput = document.getElementById('music-file-input');
-    const musicUrlInput = document.getElementById('music-url');
-    const musicAudio = document.getElementById('music-preview');
-    const startTimeInput = document.getElementById('music-startTime');
-    const endTimeInput = document.getElementById('music-endTime');
-    const volumeInput = document.getElementById('music-volume');
-    const volumeDisplay = document.getElementById('volume-display');
-    const testLoopBtn = document.getElementById('btn-preview-loop');
-
-    if (musicUploadBtn && musicFileInput) {
-        musicUploadBtn.addEventListener('click', () => musicFileInput.click());
-
-        musicFileInput.addEventListener('change', function () {
-            if (!this.files[0]) return;
-            const btn = musicUploadBtn;
-            const originalText = btn.textContent;
-            btn.textContent = "Uploading...";
-
-            const formData = new FormData();
-            formData.append('file', this.files[0]);
-
-            fetch('/api/upload-audio', { method: 'POST', body: formData })
-                .then(r => r.text().then(text => {
-                    try { return JSON.parse(text); }
-                    catch (e) { throw new Error("Server returned non-JSON. Use Localhost."); }
-                }))
-                .then(data => {
-                    if (data.url) {
-                        musicUrlInput.value = data.url;
-                        musicAudio.src = data.url;
-                        showToast("Music Uploaded!");
-                    } else { throw new Error(data.error); }
-                })
-                .catch(err => {
-                    console.error('Upload failed:', err);
-                    alert('⚠️ Upload Failed: You are likely on the Live Site.\nPlease use http://localhost:3000/admin to upload music.');
-                    showToast("Upload Failed", true);
-                })
-                .finally(() => btn.textContent = originalText);
-        });
-    }
-
-    // Volume Control
-    if (volumeInput && volumeDisplay) {
-        volumeInput.addEventListener('input', (e) => {
-            const val = e.target.value;
-            volumeDisplay.textContent = val + "%";
-            if (musicAudio) musicAudio.volume = val / 100;
-        });
-    }
-
-    // Preview Logic
-    if (musicAudio) {
-        musicAudio.addEventListener('timeupdate', () => {
-            const start = parseFloat(startTimeInput.value) || 0;
-            const end = parseFloat(endTimeInput.value) || 0;
-
-            if (end > 0 && musicAudio.currentTime >= end) {
-                musicAudio.currentTime = start;
-                musicAudio.play();
-            }
-        });
-    }
-
-    if (testLoopBtn) {
-        testLoopBtn.addEventListener('click', () => {
-            const end = parseFloat(endTimeInput.value) || 0;
-            if (end > 5) {
-                musicAudio.currentTime = end - 5;
-                musicAudio.play();
-            } else {
-                musicAudio.currentTime = 0;
-                musicAudio.play();
+            try {
+                await setDoc(doc(db, "content", CONTENT_DOC_ID), updatedData);
+                showToast('Saved to Firebase!');
+                currentData = updatedData;
+            } catch (error) {
+                console.error("Error writing document: ", error);
+                showToast('Error saving data', true);
+            } finally {
+                saveBtn.textContent = "💾 Save All Changes";
             }
         });
     }
@@ -763,28 +457,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    // Bottom Upload Manager (Optional fallback)
-    const fileInput = document.getElementById('image-upload-input');
-    const uploadBtn = document.getElementById('upload-btn');
-    if (fileInput && uploadBtn) {
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files.length > 0) uploadBtn.style.display = 'inline-block';
-        });
-        uploadBtn.addEventListener('click', () => {
-            const file = fileInput.files[0];
-            if (!file) return;
-            const formData = new FormData();
-            formData.append('image', file);
-            fetch('/api/upload', { method: 'POST', body: formData })
-                .then(res => res.json())
-                .then(data => {
-                    const urlInput = document.getElementById('uploaded-url');
-                    if (urlInput && data.url) {
-                        urlInput.value = data.url;
-                        document.getElementById('uploaded-url-container').style.display = 'block';
-                        showToast("Uploaded!");
-                    }
-                });
+    // Volume/Music Preview Logic (Client Side only)
+    const volumeInput = document.getElementById('music-volume');
+    const volumeDisplay = document.getElementById('volume-display');
+    const musicAudio = document.getElementById('music-preview');
+    if (volumeInput && volumeDisplay && musicAudio) {
+        volumeInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            volumeDisplay.textContent = val + "%";
+            musicAudio.volume = val / 100;
         });
     }
-}); // End of DOMContentLoaded
+
+});
