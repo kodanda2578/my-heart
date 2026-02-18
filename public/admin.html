@@ -100,7 +100,8 @@
                     <div class="form-group">
                         <label>Hero Background Image</label>
                         <div style="display: flex; gap: 10px; align-items: center;">
-                            <input type="hidden" name="hero.backgroundImage" id="hero-backgroundImage">
+                            <input type="text" name="hero.backgroundImage" id="hero-backgroundImage"
+                                placeholder="Paste Image URL or Upload" style="flex: 1; padding: 8px;">
                             <img id="hero-image-preview" src="" alt="Preview"
                                 style="width: 80px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; display: none;">
                             <input type="file" id="hero-file-input" style="display:none;" accept="image/*,video/*">
@@ -128,7 +129,8 @@
                         <label>Story Image</label>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <!-- Hidden input stores the actual URL -->
-                            <input type="hidden" name="story.imageUrl" id="story-imageUrl">
+                            <input type="text" name="story.imageUrl" id="story-imageUrl" placeholder="Paste Image URL"
+                                style="flex: 1; padding: 8px;">
 
                             <!-- Preview Image -->
                             <img id="story-image-preview" src="" alt="Preview"
@@ -182,7 +184,8 @@
                             <label>Left Large Photo</label>
                             <img id="collage-preview-1" src=""
                                 style="width: 100%; height: 150px; object-fit: cover; display: none; border-radius: 8px; margin-bottom: 10px;">
-                            <input type="hidden" id="collage-url-1">
+                            <input type="text" id="collage-url-1" placeholder="Paste URL"
+                                style="width: 100%; margin-bottom: 5px; padding: 5px;">
                             <button type="button" class="btn-primary" id="btn-upload-collage-1">📁 Upload Left
                                 Photo</button>
                             <input type="file" id="file-collage-1" style="display: none;" accept="image/*">
@@ -191,7 +194,8 @@
                             <label>Right Top Photo</label>
                             <img id="collage-preview-2" src=""
                                 style="width: 100%; height: 150px; object-fit: cover; display: none; border-radius: 8px; margin-bottom: 10px;">
-                            <input type="hidden" id="collage-url-2">
+                            <input type="text" id="collage-url-2" placeholder="Paste URL"
+                                style="width: 100%; margin-bottom: 5px; padding: 5px;">
                             <button type="button" class="btn-primary" id="btn-upload-collage-2">📁 Upload Right
                                 Top</button>
                             <input type="file" id="file-collage-2" style="display: none;" accept="image/*">
@@ -200,7 +204,8 @@
                             <label>Right Bottom Photo</label>
                             <img id="collage-preview-3" src=""
                                 style="width: 100%; height: 150px; object-fit: cover; display: none; border-radius: 8px; margin-bottom: 10px;">
-                            <input type="hidden" id="collage-url-3">
+                            <input type="text" id="collage-url-3" placeholder="Paste URL"
+                                style="width: 100%; margin-bottom: 5px; padding: 5px;">
                             <button type="button" class="btn-primary" id="btn-upload-collage-3">📁 Upload Right
                                 Bottom</button>
                             <input type="file" id="file-collage-3" style="display: none;" accept="image/*">
@@ -259,7 +264,8 @@
                     <div class="form-group" style="padding-top: 15px; border-top: 1px solid #333;">
                         <label>🔒 Secret Video (Revealed with Password)</label>
                         <div style="display: flex; gap: 10px; align-items: center;">
-                            <input type="hidden" id="future-videoUrl">
+                            <input type="text" id="future-videoUrl" placeholder="Paste Video URL"
+                                style="flex: 1; padding: 8px;">
                             <video id="future-video-preview" controls
                                 style="max-width: 150px; display: none; border-radius: 8px;"></video>
                             <input type="file" id="future-video-input" accept="video/*" hidden>
@@ -284,7 +290,8 @@
                             <h3>😂 Laugh</h3>
                             <input type="file" id="file-vibe-1" accept="image/*" hidden>
                             <button type="button" class="btn-primary" id="btn-upload-vibe-1">📁 Upload Photo</button>
-                            <input type="hidden" id="vibe-url-1">
+                            <input type="text" id="vibe-url-1" placeholder="Paste URL"
+                                style="width: 100%; margin-top: 5px; padding: 5px;">
                             <img id="vibe-preview-1" src="" class="preview-img" style="display:none; margin-top:10px;">
                         </div>
 
@@ -293,7 +300,8 @@
                             <h3>🤗 Hug</h3>
                             <input type="file" id="file-vibe-2" accept="image/*" hidden>
                             <button type="button" class="btn-primary" id="btn-upload-vibe-2">📁 Upload Photo</button>
-                            <input type="hidden" id="vibe-url-2">
+                            <input type="text" id="vibe-url-2" placeholder="Paste URL"
+                                style="width: 100%; margin-top: 5px; padding: 5px;">
                             <img id="vibe-preview-2" src="" class="preview-img" style="display:none; margin-top:10px;">
                         </div>
 
@@ -302,7 +310,8 @@
                             <h3>🤪 Silly</h3>
                             <input type="file" id="file-vibe-3" accept="image/*" hidden>
                             <button type="button" class="btn-primary" id="btn-upload-vibe-3">📁 Upload Photo</button>
-                            <input type="hidden" id="vibe-url-3">
+                            <input type="text" id="vibe-url-3" placeholder="Paste URL"
+                                style="width: 100%; margin-top: 5px; padding: 5px;">
                             <img id="vibe-preview-3" src="" class="preview-img" style="display:none; margin-top:10px;">
                         </div>
 
@@ -311,7 +320,8 @@
                             <h3>✈️ Travel</h3>
                             <input type="file" id="file-vibe-4" accept="image/*" hidden>
                             <button type="button" class="btn-primary" id="btn-upload-vibe-4">📁 Upload Photo</button>
-                            <input type="hidden" id="vibe-url-4">
+                            <input type="text" id="vibe-url-4" placeholder="Paste URL"
+                                style="width: 100%; margin-top: 5px; padding: 5px;">
                             <img id="vibe-preview-4" src="" class="preview-img" style="display:none; margin-top:10px;">
                         </div>
 
@@ -320,7 +330,8 @@
                             <h3>❤️ Love</h3>
                             <input type="file" id="file-vibe-5" accept="image/*" hidden>
                             <button type="button" class="btn-primary" id="btn-upload-vibe-5">📁 Upload Photo</button>
-                            <input type="hidden" id="vibe-url-5">
+                            <input type="text" id="vibe-url-5" placeholder="Paste URL"
+                                style="width: 100%; margin-top: 5px; padding: 5px;">
                             <img id="vibe-preview-5" src="" class="preview-img" style="display:none; margin-top:10px;">
                         </div>
                     </div>
@@ -339,7 +350,8 @@
                     <div class="form-group">
                         <label>Upload Song (MP3)</label>
                         <div style="display: flex; gap: 10px; align-items: center;">
-                            <input type="hidden" id="music-url">
+                            <input type="text" id="music-url" placeholder="Paste Music URL or Upload"
+                                style="flex: 1; padding: 8px;">
                             <input type="file" id="music-file-input" accept="audio/*" hidden>
                             <button type="button" id="music-upload-btn" class="btn-primary">📁 Upload Music</button>
                             <span id="music-upload-status" style="font-size: 0.9em; color: #666;"></span>

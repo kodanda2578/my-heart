@@ -223,11 +223,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="form-group">
                     <label>Image</label>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="hidden" value="${item.imageUrl || ''}" id="timeline-url-${index}">
-                        <img src="${item.imageUrl || ''}" id="timeline-preview-${index}" style="width: 40px; height: 40px; object-fit: cover; display: ${item.imageUrl ? 'block' : 'none'}; border-radius: 4px;">
-                        <input type="file" id="timeline-file-${index}" style="display:none" onchange="uploadItemImage('timeline', ${index})">
-                        <button type="button" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem;" onclick="document.getElementById('timeline-file-${index}').click()">📁 Upload</button>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <input type="text" value="${item.imageUrl || ''}" id="timeline-url-${index}" placeholder="Paste URL or Upload ->"
+                            oninput="updateTimeline(${index}, 'imageUrl', this.value); updatePreview('timeline-preview-${index}', this.value)"
+                            style="padding: 5px;">
+                        
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <img src="${item.imageUrl || ''}" id="timeline-preview-${index}" style="width: 40px; height: 40px; object-fit: cover; display: ${item.imageUrl ? 'block' : 'none'}; border-radius: 4px;">
+                            <input type="file" id="timeline-file-${index}" style="display:none" onchange="uploadItemImage('timeline', ${index})">
+                            <button type="button" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem;" onclick="document.getElementById('timeline-file-${index}').click()">📁 Upload</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -248,7 +253,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <img src="${item.imageUrl || 'https://placehold.co/100?text=No+Image'}" id="gallery-preview-${index}" style="width:100%; height:120px; object-fit:cover; margin-bottom:10px;">
                 
                 <div class="form-group" style="text-align: center;">
-                    <input type="hidden" value="${item.imageUrl || ''}" id="gallery-url-${index}">
+                    <input type="text" value="${item.imageUrl || ''}" id="gallery-url-${index}" placeholder="Paste URL or Upload Below"
+                        oninput="updateGallery(${index}, 'imageUrl', this.value); updatePreview('gallery-preview-${index}', this.value)"
+                        style="width: 100%; margin-bottom: 5px; padding: 5px;">
                     <input type="file" id="gallery-file-${index}" style="display:none" onchange="uploadItemImage('gallery', ${index})">
                     <button type="button" class="btn-primary" style="width:100%; padding: 5px;" onclick="document.getElementById('gallery-file-${index}').click()">📁 Upload Photo</button>
                 </div>
@@ -468,5 +475,22 @@ document.addEventListener('DOMContentLoaded', () => {
             musicAudio.volume = val / 100;
         });
     }
+
+    // --- HELPER: URL INPUT LISTENER ---
+    function setupUrlInput(inputId, previewId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        input.addEventListener('input', (e) => {
+            updatePreview(previewId, e.target.value);
+        });
+    }
+
+    setupUrlInput('hero-backgroundImage', 'hero-image-preview');
+    setupUrlInput('story-imageUrl', 'story-image-preview');
+    setupUrlInput('future-videoUrl', 'future-video-preview');
+    setupUrlInput('music-url', 'music-preview');
+
+    [1, 2, 3].forEach(n => setupUrlInput(`collage-url-${n}`, `collage-preview-${n}`));
+    [1, 2, 3, 4, 5].forEach(n => setupUrlInput(`vibe-url-${n}`, `vibe-preview-${n}`));
 
 });
