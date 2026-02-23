@@ -287,7 +287,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(initItemAnimations, 100);
     }
 
+    // --- TYPEWRITER EFFECT ---
+    function startTypewriter() {
+        const source = document.getElementById('source-text');
+        const target = document.getElementById('typing-text');
+        if (!source || !target) {
+            console.error("Typewriter elements not found:", { source, target });
+            return;
+        }
+
+        const text = source.textContent; // Use textContent to read even if hidden
+        console.log("Starting Typewriter with text length:", text.length, "Text:", text.substring(0, 20) + "...");
+
+        target.innerHTML = ""; // Clear
+        let i = 0;
+
+        function type() {
+            if (i < text.length) {
+                target.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(type, 50); // Speed
+            } else {
+                console.log("Typewriter finished");
+                const cursor = document.querySelector('.cursor');
+                if (cursor) cursor.style.display = 'none'; // Hide cursor when done
+            }
+        }
+        type();
+    }
+
     // --- 3. ANIMATIONS & INTERACTIONS ---
+
     function initItemAnimations() {
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
@@ -295,6 +325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     entry.target.classList.add('visible');
 
                     // Trigger Typewriter if Letter Section
+                    // FIX: Check for .letter-card since that's what we observe
                     if (entry.target.classList.contains('letter-card') || entry.target.querySelector('.letter-body')) {
                         console.log("Letter section visible! Starting typewriter...");
                         startTypewriter();
@@ -304,14 +335,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }, { threshold: 0.2 });
 
+        // Fix: Observe ALL animated elements, including Hero, Story card, etc.
+        // Added: .hero-content, .glass-card, .collage-frame, .fade-in, .fade-in-up
         document.querySelectorAll('.timeline-item, .gallery-item, .vibe-card, .letter-card, .hero-content, .glass-card, .collage-frame, .fade-in, .fade-in-up').forEach(el => {
             observer.observe(el);
         });
 
-        // SAFETY FALLBACK
+        // SAFETY FALLBACK: Force visibility after 1s if observer fails
         setTimeout(() => {
             document.querySelectorAll('.timeline-item, .gallery-item').forEach(el => {
                 if (!el.classList.contains('visible')) {
+                    console.log("Force showing item:", el);
                     el.classList.add('visible');
                     el.style.opacity = 1;
                     el.style.transform = 'translateY(0)';
@@ -329,23 +363,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!sourceHelper || !typingTarget) return;
 
         const text = sourceHelper.innerText;
-        typingTarget.innerHTML = "";
+        typingTarget.innerHTML = ""; // Clear existing
         isTyping = true;
 
         let i = 0;
         function type() {
             if (i < text.length) {
+                // Add newlines as <br>
                 if (text.charAt(i) === '\n') {
                     typingTarget.innerHTML += '<br>';
                 } else {
                     typingTarget.innerHTML += text.charAt(i);
                 }
                 i++;
-                setTimeout(type, 50);
+                setTimeout(type, 50); // Adjust speed here
             } else {
                 isTyping = false;
-                const cursor = document.querySelector('.cursor');
-                if (cursor) cursor.style.display = 'none';
             }
         }
         type();
